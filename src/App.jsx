@@ -1,14 +1,22 @@
-import React from "react";
-import Header from "./sections/Header"; // Sesuaikan path jika perlu
-import Galaxy from "./reactbits/Galaxy"
+import React, { useState, useEffect } from "react";
+import Header from "./sections/Header";
+import Galaxy from "./reactbits/Galaxy";
+import Features from "./sections/Features";
+import Hero from "./sections/Hero";
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    // HAPUS bg-black dari sini agar tidak menutupi canvas di belakangnya
     <div className="relative min-h-screen text-white overflow-hidden">
-      
       {/* 🌌 BACKGROUND GALAXY */}
-      {/* Pindahkan bg-black ke sini, dan gunakan z-0 sebagai layer paling dasar */}
       <div className="fixed inset-0 z-0 bg-black">
         <Galaxy
           mouseRepulsion
@@ -26,24 +34,35 @@ function App() {
         />
       </div>
 
-      {/* HEADER */}
-      {/* Header sudah memiliki fixed dan z-50 di dalamnya, jadi aman */}
       <Header />
 
-      {/* CONTENT */}
-      {/* Tambahkan relative dan z-10 agar konten tampil di ATAS background Galaxy */}
-      <main className="pt-24 px-6 relative z-10 pointer-events-none">
-        <section className="text-center py-20 pointer-events-auto">
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 drop-shadow-lg">
-            Smart Road Repair <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.5)]">AI</span>
-          </h1>
-
-          <p className="text-gray-300 max-w-xl mx-auto drop-shadow-md">
-            Robot ajib bisa nambal jalan otomatis.
-          </p>
-        </section>
+      <main className="pt-24 relative z-10 pointer-events-none flex flex-col items-center">
+        
+        {isLoading ? (
+          <section className="text-center py-20 pointer-events-auto w-full max-w-4xl flex flex-col items-center px-6 min-h-[80vh] justify-center">
+            <div className="w-full flex flex-col items-center gap-6 animate-pulse">
+              <div className="h-8 w-48 bg-gray-700/60 rounded-full mb-4"></div>
+              <div className="h-14 md:h-20 w-full bg-gray-700/60 rounded-2xl"></div>
+              <div className="w-full max-w-2xl space-y-3 flex flex-col items-center mt-4">
+                <div className="h-4 w-full bg-gray-700/60 rounded-full"></div>
+                <div className="h-4 w-5/6 bg-gray-700/60 rounded-full"></div>
+              </div>
+              <div className="flex gap-4 mt-6">
+                <div className="h-12 w-48 bg-gray-700/60 rounded-full"></div>
+                <div className="h-12 w-48 bg-gray-700/60 rounded-full"></div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <div className="w-full transition-opacity duration-1000 ease-in-out opacity-100 animate-[fadeIn_1s_ease-in-out] pointer-events-auto flex flex-col items-center">
+            {/* PANGGIL KOMPONEN HERO DI SINI */}
+            <Hero />
+            
+            {/* PANGGIL KOMPONEN FEATURES DI SINI */}
+            <Features />
+          </div>
+        )}
       </main>
-
     </div>
   );
 }
