@@ -4,6 +4,7 @@ import Header from "./sections/Header";
 import Footer from "./sections/Footer";
 import Home from "./pages/Home";
 import Marketplace from "./sections/Marketplace";
+import FloatingCart from "./components/FloatingChart";
 
 function App() {
   return (
@@ -25,6 +26,9 @@ function App() {
 
         {/* Footer akan selalu tampil di halaman mana pun */}
         <Footer />
+        
+        {/* Floating Cart hanya muncul di halaman Home */}
+        <FloatingCart />
 
       </div>
     </Router>
