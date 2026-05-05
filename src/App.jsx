@@ -4,7 +4,8 @@ import Header from "./sections/Header";
 import Footer from "./sections/Footer";
 import Home from "./pages/Home";
 import Marketplace from "./sections/Marketplace";
-import FloatingCart from "./components/FloatingChart";
+import ProductDetail from "./pages/ProductDetail"; // <--- 1. IMPORT HALAMAN DETAIL PRODUK
+import FloatingCart from "./components/FloatingChart"; // Pastikan namanya FloatingCart
 
 function App() {
   return (
@@ -22,14 +23,17 @@ function App() {
           
           {/* URL "/marketplace" akan menampilkan halaman Katalog Produk */}
           <Route path="/marketplace" element={<Marketplace />} />
+          
+          {/* URL "/product/:id" akan menampilkan halaman Inspect Produk berdasarkan ID */}
+          <Route path="/product/:id" element={<ProductDetail />} /> 
         </Routes>
+
+        {/* Floating Cart (Logika show/hide per halaman sudah ada di dalam komponennya) */}
+        <FloatingCart />
 
         {/* Footer akan selalu tampil di halaman mana pun */}
         <Footer />
         
-        {/* Floating Cart hanya muncul di halaman Home */}
-        <FloatingCart />
-
       </div>
     </Router>
   );
