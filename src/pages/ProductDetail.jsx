@@ -19,7 +19,7 @@ const ProductDetail = () => {
 
   // State untuk Slider Gambar & Kuantitas
   const [images, setImages] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0); // Indeks gambar yang sedang dilihat
+  const [currentIndex, setCurrentIndex] = useState(0); 
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
@@ -28,6 +28,7 @@ const ProductDetail = () => {
     const fetchProductData = async () => {
       setIsLoading(true);
       try {
+        // 1. Ambil data produk utama
         const { data: mainProduct, error: mainError } = await supabase
           .from("products")
           .select("*")
@@ -37,7 +38,7 @@ const ProductDetail = () => {
         if (mainError) throw mainError;
         setProduct(mainProduct);
 
-        // Simulasi banyak gambar (Kenyataannya nanti Anda pakai array URL gambar di DB)
+        // Siapkan galeri gambar
         const gallery =
           mainProduct.image_gallery && mainProduct.image_gallery.length > 0
             ? mainProduct.image_gallery
@@ -46,14 +47,21 @@ const ProductDetail = () => {
         setImages(gallery);
         setActiveImage(gallery[0]);
 
+        // 2. Ambil data produk terkait (Rekomendasi Lainnya)
         const { data: relatedData, error: relatedError } = await supabase
           .from("products")
           .select("*")
-          .neq("id", id)
+          .neq("id", id) // Kecualikan produk yang sedang dilihat
           .limit(5);
 
-        if (relatedError) throw relatedError;
-        setRelatedProducts(relatedData);
+        // Pastikan error tidak menghentikan aplikasi, cukup set array kosong jika gagal/kosong
+        if (relatedError) {
+          console.warn("Gagal memuat rekomendasi:", relatedError.message);
+          setRelatedProducts([]);
+        } else {
+          setRelatedProducts(relatedData || []);
+        }
+
       } catch (error) {
         console.error("Gagal memuat detail produk:", error.message);
       } finally {
@@ -64,6 +72,12 @@ const ProductDetail = () => {
     fetchProductData();
   }, [id]);
 
+  // Fungsi pengganti gambar saat diklik dari thumbnail (desktop)
+  const setActiveImage = (imgUrl) => {
+    const index = images.findIndex((img) => img === imgUrl);
+    if (index !== -1) setCurrentIndex(index);
+  };
+
   const formatRupiah = (angka) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -72,7 +86,7 @@ const ProductDetail = () => {
     }).format(angka);
   };
 
-  // Deteksi saat pengguna menggeser (swipe) gambar untuk mengubah indikator titik (dots)
+  // Geser gambar di mobile
   const handleScroll = (e) => {
     const scrollLeft = e.target.scrollLeft;
     const width = e.target.offsetWidth;
@@ -94,7 +108,7 @@ const ProductDetail = () => {
         <h2 className="text-white text-xl mb-4">Produk tidak ditemukan.</h2>
         <button
           onClick={() => navigate("/marketplace")}
-          className="text-cyan-400 border border-cyan-400 px-6 py-2 rounded-lg"
+          className="text-cyan-400 border border-cyan-400 px-6 py-2 rounded-lg hover:bg-cyan-400/10 transition-colors"
         >
           Kembali ke Marketplace
         </button>
@@ -104,7 +118,7 @@ const ProductDetail = () => {
 
   return (
     <div className="bg-[#030712] min-h-screen pb-24 md:pb-12">
-      {/* HEADER MOBILE (Nempel di Atas dengan Tombol Kembali) */}
+      {/* HEADER MOBILE */}
       <div className="sticky top-0 z-40 bg-[#030712]/80 backdrop-blur-lg px-4 py-3 border-b border-white/10 md:pt-24 md:border-none md:bg-transparent md:backdrop-blur-none">
         <div className="max-w-6xl mx-auto flex items-center gap-4">
           <button
@@ -121,13 +135,15 @@ const ProductDetail = () => {
 
       <div className="max-w-6xl mx-auto px-0 md:px-6 mt-0 md:mt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-12 mb-12">
-          {/* ================= BAGIAN KIRI: GALERI GAMBAR (TIKTOK SHOP STYLE) ================= */}
+          
+          {/* ================= BAGIAN KIRI: GALERI GAMBAR ================= */}
           <div className="flex flex-col relative bg-gray-900 md:bg-transparent">
-            {/* Wrapper Slider Gambar (Tinggi 45vh di HP, Persegi di PC) */}
             <div className="relative w-full h-[45vh] md:h-auto md:aspect-square bg-gray-800 md:rounded-2xl overflow-hidden shadow-lg border-b md:border border-white/10">
-              {/* Slider Area (Bisa di-swipe) */}
+              
+              {/* Area Slider */}
               <div
-                className="flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar"
+                id="image-slider"
+                className="flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar scroll-smooth"
                 onScroll={handleScroll}
               >
                 {images.map((img, index) => (
@@ -140,12 +156,11 @@ const ProductDetail = () => {
                 ))}
               </div>
 
-              {/* Label MALL di dalam gambar */}
               <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-[10px] font-black px-2.5 py-1 rounded-sm shadow-lg">
                 MALL
               </div>
 
-              {/* Indikator Titik (Dots) di Bawah Gambar */}
+              {/* Indikator Titik (Dots) */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40 px-2 py-1.5 rounded-full backdrop-blur-md">
                 {images.map((_, index) => (
                   <div
@@ -160,24 +175,26 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Thumbnail untuk Desktop (Hidden di Mobile) */}
+            {/* Thumbnail untuk Desktop */}
             <div className="hidden md:flex gap-3 overflow-x-auto hide-scrollbar mt-4">
               {images.map((img, index) => (
                 <button
                   key={index}
-                  // Kalau di desktop klik thumbnail untuk ganti gambar (simulasi logika aja)
-                  onClick={() => alert("Fitur geser thumbnail desktop")}
+                  onClick={() => {
+                    // Logika menggeser scrollbar saat thumbnail desktop diklik
+                    const slider = document.getElementById("image-slider");
+                    if(slider) {
+                      slider.scrollLeft = index * slider.offsetWidth;
+                    }
+                    setCurrentIndex(index);
+                  }}
                   className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
                     index === currentIndex
                       ? "border-cyan-400"
                       : "border-transparent opacity-50 hover:opacity-100"
                   }`}
                 >
-                  <img
-                    src={img}
-                    alt="Thumb"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={img} alt="Thumb" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -185,19 +202,16 @@ const ProductDetail = () => {
 
           {/* ================= BAGIAN KANAN: INFO PRODUK ================= */}
           <div className="flex flex-col px-4 md:px-0 pt-4 md:pt-0">
-            {/* Harga Blok (Dipindah ke atas ala TikTok Shop) */}
             <div className="mb-2">
               <div className="text-2xl md:text-4xl font-black text-cyan-400 tracking-tight">
                 {formatRupiah(product.price)}
               </div>
             </div>
 
-            {/* Judul Produk */}
             <h1 className="text-lg md:text-2xl font-medium text-white mb-3 leading-snug">
               {product.name}
             </h1>
 
-            {/* Rating & Terjual */}
             <div className="flex items-center gap-3 text-[11px] md:text-sm text-gray-400 mb-6 divide-x divide-gray-700 pb-4 border-b border-white/5">
               <div className="flex items-center gap-1 text-yellow-400 pr-3">
                 <span className="font-bold text-white underline decoration-yellow-400">
@@ -209,42 +223,22 @@ const ProductDetail = () => {
                 <FaStar className="text-[10px] md:text-sm" />
                 <FaStar className="text-gray-600 text-[10px] md:text-sm" />
               </div>
-              <div className="pl-3">
-                <span className="text-white font-medium">10+</span> Penilaian
-              </div>
-              <div className="pl-3">
-                <span className="text-white font-medium">25+</span> Terjual
-              </div>
+              <div className="pl-3"><span className="text-white font-medium">10+</span> Penilaian</div>
+              <div className="pl-3"><span className="text-white font-medium">25+</span> Terjual</div>
             </div>
 
-            {/* Kuantitas (Tampil di Desktop) */}
+            {/* Kuantitas Desktop */}
             <div className="hidden md:flex items-center gap-6 mb-8">
-              <span className="text-gray-400 text-sm font-medium">
-                Kuantitas
-              </span>
+              <span className="text-gray-400 text-sm font-medium">Kuantitas</span>
               <div className="flex items-center border border-gray-700 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setQty(Math.max(1, qty - 1))}
-                  className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700"
-                >
-                  -
-                </button>
-                <div className="px-6 py-2 bg-transparent text-white border-x border-gray-700">
-                  {qty}
-                </div>
-                <button
-                  onClick={() => setQty(qty + 1)}
-                  className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700"
-                >
-                  +
-                </button>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700">-</button>
+                <div className="px-6 py-2 bg-transparent text-white border-x border-gray-700">{qty}</div>
+                <button onClick={() => setQty(qty + 1)} className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700">+</button>
               </div>
-              <span className="text-gray-500 text-xs">
-                Sisa {product.stock} buah
-              </span>
+              <span className="text-gray-500 text-xs">Sisa {product.stock} buah</span>
             </div>
 
-            {/* Tombol Aksi (Tampil di Desktop) */}
+            {/* Tombol Aksi Desktop */}
             <div className="hidden md:flex gap-4 mt-auto">
               <button
                 onClick={() => alert("Dimasukkan ke keranjang!")}
@@ -270,12 +264,8 @@ const ProductDetail = () => {
                 <FaStore />
               </div>
               <div>
-                <h3 className="text-white font-bold text-sm md:text-lg">
-                  RoadFix Official Store
-                </h3>
-                <p className="text-gray-400 text-[10px] md:text-sm">
-                  Aktif 5 menit lalu | Kota Semarang
-                </p>
+                <h3 className="text-white font-bold text-sm md:text-lg">RoadFix Official Store</h3>
+                <p className="text-gray-400 text-[10px] md:text-sm">Aktif 5 menit lalu | Kota Semarang</p>
               </div>
             </div>
             <button className="px-3 py-1.5 border border-cyan-400/50 text-cyan-400 text-[10px] md:text-sm rounded-lg hover:bg-cyan-400/10 transition-colors font-semibold">
@@ -286,69 +276,63 @@ const ProductDetail = () => {
 
         {/* ================= DESKRIPSI PRODUK ================= */}
         <div className="px-4 md:px-0 mb-8">
-          <h2 className="text-sm md:text-xl font-bold text-white mb-4">
-            Spesifikasi & Deskripsi
-          </h2>
+          <h2 className="text-sm md:text-xl font-bold text-white mb-4">Spesifikasi & Deskripsi</h2>
           <div className="text-gray-400 text-xs md:text-base leading-relaxed whitespace-pre-line bg-[#111827]/50 p-4 rounded-xl border border-white/5">
-            Kategori:{" "}
-            <span className="text-cyan-400 font-bold">{product.category}</span>
-            <br />
-            <br />
+            Kategori: <span className="text-cyan-400 font-bold">{product.category}</span>
+            <br /><br />
             {product.description}
-            <br />
-            <br />
-            * Garansi resmi RoadFix AI selama 1 Tahun.
-            <br />
-            * Pemasangan dan instalasi software sudah termasuk dalam paket
-            pembelian.
-            <br />* Pengiriman unit robot dilakukan menggunakan armada khusus
-            kami.
+            <br /><br />
+            * Garansi resmi RoadFix AI selama 1 Tahun.<br />
+            * Pemasangan dan instalasi software sudah termasuk dalam paket pembelian.<br />
+            * Pengiriman unit robot dilakukan menggunakan armada khusus kami.
           </div>
         </div>
 
         {/* ================= PRODUK LAIN DARI TOKO INI ================= */}
         <div className="px-4 md:px-0">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm md:text-xl font-bold text-white">
-              Rekomendasi Lainnya
-            </h2>
-            <Link
-              to="/marketplace"
-              className="text-cyan-400 text-xs flex items-center gap-1 hover:underline"
-            >
+            <h2 className="text-sm md:text-xl font-bold text-white">Rekomendasi Lainnya</h2>
+            <Link to="/marketplace" className="text-cyan-400 text-xs flex items-center gap-1 hover:underline">
               Lihat Semua <FaChevronRight className="text-[8px]" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
-            {relatedProducts.map((relProduct) => (
-              <Link
-                to={`/product/${relProduct.id}`}
-                key={relProduct.id}
-                className="bg-gray-900 border border-white/5 rounded-lg overflow-hidden hover:border-cyan-400/40 transition-colors group flex flex-col"
-              >
-                <div className="aspect-square bg-gray-800 overflow-hidden">
-                  <img
-                    src={relProduct.image_url}
-                    alt={relProduct.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                </div>
-                <div className="p-2 flex flex-col flex-grow justify-between">
-                  <h3 className="text-[10px] text-gray-200 line-clamp-2 leading-tight mb-1">
-                    {relProduct.name}
-                  </h3>
-                  <div className="text-cyan-400 font-bold text-[10px] truncate">
-                    {formatRupiah(relProduct.price)}
+          {/* Fallback jika tidak ada produk terkait */}
+          {relatedProducts.length > 0 ? (
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
+              {relatedProducts.map((relProduct) => (
+                <Link
+                  to={`/product/${relProduct.id}`}
+                  key={relProduct.id}
+                  className="bg-gray-900 border border-white/5 rounded-lg overflow-hidden hover:border-cyan-400/40 transition-colors group flex flex-col"
+                >
+                  <div className="aspect-square bg-gray-800 overflow-hidden">
+                    <img
+                      src={relProduct.image_url}
+                      alt={relProduct.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                  <div className="p-2 flex flex-col flex-grow justify-between">
+                    <h3 className="text-[10px] text-gray-200 line-clamp-2 leading-tight mb-1">
+                      {relProduct.name}
+                    </h3>
+                    <div className="text-cyan-400 font-bold text-[10px] truncate">
+                      {formatRupiah(relProduct.price)}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 border border-dashed border-gray-700 rounded-xl bg-gray-900/30">
+              <p className="text-gray-500 text-xs">Belum ada rekomendasi produk lain.</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ================= FIXED BOTTOM BAR (KHUSUS MOBILE) ================= */}
+      {/* ================= FIXED BOTTOM BAR ================= */}
       <div className="md:hidden fixed bottom-0 left-0 w-full bg-[#030712] border-t border-gray-800 z-50 flex pb-safe">
         <button className="flex flex-col items-center justify-center w-1/4 py-2 bg-gray-900 text-gray-300 hover:text-cyan-400 border-r border-gray-800 transition-colors">
           <FaStore className="text-base mb-1" />
