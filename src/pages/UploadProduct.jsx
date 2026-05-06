@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { FaPlus, FaTimes, FaUpload, FaSpinner } from "react-icons/fa";
+import { FaPlus, FaTimes, FaUpload, FaSpinner, FaCheckCircle } from "react-icons/fa"; // Tambah FaCheckCircle
 import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion"; // Tambah motion & AnimatePresence
 
 const UploadProduct = () => {
   const navigate = useNavigate();
   
-  // State untuk Data Teks
+  // State Data Teks
   const [formData, setFormData] = useState({
     name: "",
     category: "Produk",
@@ -15,18 +16,19 @@ const UploadProduct = () => {
     description: ""
   });
 
-  // State untuk Gambar (Maksimal 6)
+  // State Gambar
   const [images, setImages] = useState(Array(6).fill(null)); 
   const [previews, setPreviews] = useState(Array(6).fill(null)); 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // --- STATE BARU UNTUK POP-UP ---
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  // Menangani input teks
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Menangani pemilihan gambar
   const handleImageChange = (index, e) => {
     const file = e.target.files[0];
     if (file) {
@@ -40,7 +42,6 @@ const UploadProduct = () => {
     }
   };
 
-  // Menghapus gambar dari kotak
   const removeImage = (index) => {
     const newImages = [...images];
     newImages[index] = null;
@@ -51,13 +52,11 @@ const UploadProduct = () => {
     setPreviews(newPreviews);
   };
 
-  // FUNGSI UTAMA SUBMIT KE SUPABASE
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // 1. Validasi: Pastikan foto utama (kotak pertama) ada[cite: 1]
       if (!images[0]) {
         alert("⚠️ Foto Utama (Kotak pertama) wajib diisi!");
         setIsSubmitting(false);
@@ -66,32 +65,26 @@ const UploadProduct = () => {
 
       const uploadedUrls = [];
 
-      // 2. Upload setiap gambar ke Supabase Storage[cite: 1]
       for (let i = 0; i < images.length; i++) {
         if (images[i]) {
           const file = images[i];
           const fileExt = file.name.split('.').pop();
-          // Membuat nama file unik agar tidak bentrok[cite: 1]
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
           
           const { error: uploadError } = await supabase.storage
             .from('product_images') 
             .upload(fileName, file);
 
-          if (uploadError) throw new Error(`Gagal upload foto ke-${i + 1}: ${uploadError.message}`);
+          if (uploadError) throw new Error(`Gagal upload foto ke-${i + 1}`);
 
-          // Ambil URL Publik gambar tersebut[cite: 1]
           const { data } = supabase.storage
             .from('product_images')
             .getPublicUrl(fileName);
 
-          if (data?.publicUrl) {
-            uploadedUrls.push(data.publicUrl);
-          }
+          if (data?.publicUrl) uploadedUrls.push(data.publicUrl);
         }
       }
 
-      // 3. Simpan data teks & URL gambar ke tabel 'products'[cite: 1]
       const { error: dbError } = await supabase.from("products").insert([
         {
           name: formData.name,
@@ -99,30 +92,56 @@ const UploadProduct = () => {
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock),
           description: formData.description,
-          image_url: uploadedUrls[0],    // Foto pertama sebagai thumbnail[cite: 1]
-          image_gallery: uploadedUrls,  // Semua foto dalam bentuk array[cite: 1]
+          image_url: uploadedUrls[0],
+          image_gallery: uploadedUrls,
         }
       ]);
 
       if (dbError) throw dbError;
 
-      // 4. Notifikasi Berhasil
-      alert("✅ Produk Berhasil Ditayangkan!");
-      navigate("/marketplace"); 
+      // --- LOGIK POP-UP BERHASIL ---
+      setShowSuccess(true);
+      
+      // Tunggu 2.5 detik lalu pindah halaman
+      setTimeout(() => {
+        setShowSuccess(false);
+        navigate("/marketplace");
+      }, 2500);
 
     } catch (error) {
-      console.error("Detail Error:", error);
-      alert(`❌ Terjadi Kesalahan:\n${error.message}`);
+      console.error(error);
+      alert(`❌ Terjadi Kesalahan: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-[#030712] min-h-screen pt-24 pb-12 px-4 md:px-6">
-      <div className="max-w-3xl mx-auto bg-gray-900/60 border border-white/10 rounded-2xl shadow-xl overflow-hidden">
-        
-        {/* Header Form */}
+    <div className="bg-[#030712] min-h-screen pt-24 pb-12 px-4 md:px-6 relative">
+      
+      {/* ================= POP-UP NOTIFIKASI BERHASIL ================= */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed top-10 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none"
+          >
+            <div className="bg-gray-900/90 backdrop-blur-xl border border-cyan-500/50 px-6 py-4 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center gap-4">
+              <div className="w-10 h-10 bg-cyan-500/20 rounded-full flex items-center justify-center">
+                <FaCheckCircle className="text-cyan-400 text-2xl" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold">Produk Berhasil Ditayangkan!</h3>
+                <p className="text-gray-400 text-xs">Mengalihkan Anda ke Marketplace...</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="max-w-3xl mx-auto bg-gray-900/60 border border-white/10 rounded-2xl shadow-xl overflow-hidden relative z-10">
         <div className="px-6 py-4 border-b border-white/10 bg-black/20">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <FaUpload className="text-cyan-400" /> Tambah Produk Baru
@@ -131,8 +150,7 @@ const UploadProduct = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
-          
-          {/* BAGIAN 1: UPLOAD GAMBAR */}
+          {/* UPLOAD GAMBAR */}
           <div>
             <label className="block text-sm font-medium text-white mb-3">Foto Produk (Maks 6) <span className="text-red-500">*</span></label>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
@@ -166,7 +184,7 @@ const UploadProduct = () => {
             </div>
           </div>
 
-          {/* BAGIAN 2: DETAIL PRODUK */}
+          {/* DETAIL PRODUK */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Nama Produk/Jasa</label>
@@ -193,7 +211,6 @@ const UploadProduct = () => {
                 <input 
                   type="number" name="price" required value={formData.price} onChange={handleInputChange}
                   className="w-full bg-black/40 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:border-cyan-500 outline-none"
-                  placeholder="Harga tanpa titik (Contoh: 500000)"
                 />
               </div>
             </div>
@@ -204,7 +221,6 @@ const UploadProduct = () => {
                 <input 
                   type="number" name="stock" required value={formData.stock} onChange={handleInputChange}
                   className="w-full bg-black/40 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:border-cyan-500 outline-none"
-                  placeholder="0"
                 />
               </div>
             </div>
@@ -214,12 +230,10 @@ const UploadProduct = () => {
               <textarea 
                 name="description" required rows="4" value={formData.description} onChange={handleInputChange}
                 className="w-full bg-black/40 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:border-cyan-500 outline-none resize-none"
-                placeholder="Jelaskan detail spesifikasi dan kelebihan produk..."
               ></textarea>
             </div>
           </div>
 
-          {/* TOMBOL AKSI */}
           <div className="flex gap-4">
             <button 
               type="button" 
@@ -240,7 +254,6 @@ const UploadProduct = () => {
               )}
             </button>
           </div>
-
         </form>
       </div>
     </div>
