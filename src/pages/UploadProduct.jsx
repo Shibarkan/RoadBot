@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { FaPlus, FaTimes, FaUpload, FaSpinner, FaCheckCircle } from "react-icons/fa"; // Tambah FaCheckCircle
+import { FaPlus, FaTimes, FaUpload, FaSpinner, FaCheckCircle } from "react-icons/fa";
 import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion"; // Tambah motion & AnimatePresence
+import { motion, AnimatePresence } from "framer-motion";
 
 const UploadProduct = () => {
   const navigate = useNavigate();
   
-  // State Data Teks
   const [formData, setFormData] = useState({
     name: "",
     category: "Produk",
@@ -16,12 +15,9 @@ const UploadProduct = () => {
     description: ""
   });
 
-  // State Gambar
   const [images, setImages] = useState(Array(6).fill(null)); 
   const [previews, setPreviews] = useState(Array(6).fill(null)); 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // --- STATE BARU UNTUK POP-UP ---
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleInputChange = (e) => {
@@ -52,17 +48,40 @@ const UploadProduct = () => {
     setPreviews(newPreviews);
   };
 
+  // --- FUNGSI VALIDASI ---
+  const validateForm = () => {
+    if (!images[0]) {
+      alert("⚠️ Foto Utama (Kotak pertama) wajib diunggah!");
+      return false;
+    }
+    if (!formData.name.trim()) {
+      alert("⚠️ Nama Produk tidak boleh kosong!");
+      return false;
+    }
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      alert("⚠️ Harga harus diisi dan valid (minimal Rp 1)!");
+      return false;
+    }
+    if (!formData.stock || parseInt(formData.stock) < 0) {
+      alert("⚠️ Stok harus diisi (minimal 0)!");
+      return false;
+    }
+    if (!formData.description.trim()) {
+      alert("⚠️ Deskripsi produk harus diisi agar pembeli paham!");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Jalankan validasi sebelum proses upload dimulai
+    if (!validateForm()) return;
+
     setIsSubmitting(true);
 
     try {
-      if (!images[0]) {
-        alert("⚠️ Foto Utama (Kotak pertama) wajib diisi!");
-        setIsSubmitting(false);
-        return;
-      }
-
       const uploadedUrls = [];
 
       for (let i = 0; i < images.length; i++) {
@@ -99,10 +118,8 @@ const UploadProduct = () => {
 
       if (dbError) throw dbError;
 
-      // --- LOGIK POP-UP BERHASIL ---
       setShowSuccess(true);
       
-      // Tunggu 2.5 detik lalu pindah halaman
       setTimeout(() => {
         setShowSuccess(false);
         navigate("/marketplace");
@@ -119,7 +136,6 @@ const UploadProduct = () => {
   return (
     <div className="bg-[#030712] min-h-screen pt-24 pb-12 px-4 md:px-6 relative">
       
-      {/* ================= POP-UP NOTIFIKASI BERHASIL ================= */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
@@ -133,7 +149,7 @@ const UploadProduct = () => {
                 <FaCheckCircle className="text-cyan-400 text-2xl" />
               </div>
               <div>
-                <h3 className="text-white font-bold">Produk Berhasil Ditayangkan!</h3>
+                <h3 className="text-white font-bold text-sm md:text-base">Produk Berhasil Ditayangkan!</h3>
                 <p className="text-gray-400 text-xs">Mengalihkan Anda ke Marketplace...</p>
               </div>
             </div>
@@ -152,7 +168,9 @@ const UploadProduct = () => {
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
           {/* UPLOAD GAMBAR */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">Foto Produk (Maks 6) <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-white mb-3 italic">
+              Foto Produk (Maks 6) <span className="text-red-500">* Wajib</span>
+            </label>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               {previews.map((preview, index) => (
                 <div key={index} className="relative aspect-square">
@@ -175,7 +193,7 @@ const UploadProduct = () => {
                   ) : (
                     <label className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-700 rounded-lg hover:border-cyan-400 hover:bg-cyan-400/5 transition-all cursor-pointer text-gray-500 hover:text-cyan-400">
                       <FaPlus className="text-lg mb-1" />
-                      <span className="text-[8px] text-center uppercase font-bold">Upload</span>
+                      <span className="text-[8px] text-center uppercase font-bold text-center">Upload</span>
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(index, e)} />
                     </label>
                   )}
@@ -187,9 +205,11 @@ const UploadProduct = () => {
           {/* DETAIL PRODUK */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Nama Produk/Jasa</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Nama Produk/Jasa <span className="text-red-500">*</span>
+              </label>
               <input 
-                type="text" name="name" required value={formData.name} onChange={handleInputChange}
+                type="text" name="name" value={formData.name} onChange={handleInputChange}
                 className="w-full bg-black/40 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:border-cyan-500 outline-none transition-all"
                 placeholder="Contoh: Robot RoadFix Pro V.1"
               />
@@ -207,29 +227,38 @@ const UploadProduct = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Harga (Rp)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Harga (Rp) <span className="text-red-500">*</span>
+                </label>
                 <input 
-                  type="number" name="price" required value={formData.price} onChange={handleInputChange}
+                  type="number" name="price" value={formData.price} onChange={handleInputChange}
                   className="w-full bg-black/40 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:border-cyan-500 outline-none"
+                  placeholder="Misal: 150000"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Stok Tersedia</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                   Stok Tersedia <span className="text-red-500">*</span>
+                </label>
                 <input 
-                  type="number" name="stock" required value={formData.stock} onChange={handleInputChange}
+                  type="number" name="stock" value={formData.stock} onChange={handleInputChange}
                   className="w-full bg-black/40 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:border-cyan-500 outline-none"
+                  placeholder="Misal: 10"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Deskripsi Lengkap</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Deskripsi Lengkap <span className="text-red-500">*</span>
+              </label>
               <textarea 
-                name="description" required rows="4" value={formData.description} onChange={handleInputChange}
+                name="description" rows="4" value={formData.description} onChange={handleInputChange}
                 className="w-full bg-black/40 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:border-cyan-500 outline-none resize-none"
+                placeholder="Jelaskan detail spesifikasi produk Anda..."
               ></textarea>
             </div>
           </div>

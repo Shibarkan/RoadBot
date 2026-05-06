@@ -7,6 +7,7 @@ import Marketplace from "./sections/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
 import UploadProduct from "./pages/UploadProduct"; // <--- 1. TAMBAHKAN IMPORT INI DI ATAS
 import FloatingCart from "./components/FloatingChart";
+import Cart from "./pages/Cart";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
           
           {/* <--- 2. TARUH KODENYA DI SINI ---> */}
           <Route path="/upload" element={<UploadProduct />} /> 

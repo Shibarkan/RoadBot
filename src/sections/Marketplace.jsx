@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaShoppingCart, FaStar, FaStore, FaPlus } from "react-icons/fa"; // <-- FaPlus ditambahkan
+import {
+  FaSearch,
+  FaShoppingCart,
+  FaStar,
+  FaPlus,
+  FaTimes,
+  FaMinus,
+  FaCheckCircle,
+} from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "../supabase"; 
+import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
 
 const Marketplace = () => {
   const navigate = useNavigate();
-  
+
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("Semua");
 
+  // State Pop-up & Alert
+  const [showCartPopup, setShowCartPopup] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [qty, setQty] = useState(1);
+  const [showAlert, setShowAlert] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
-
     const fetchProducts = async () => {
       try {
         const { data, error } = await supabase
@@ -25,7 +38,7 @@ const Marketplace = () => {
         if (error) throw error;
         setProducts(data);
       } catch (error) {
-        console.error("Error fetching products:", error.message);
+        console.error(error.message);
       } finally {
         setIsLoading(false);
       }
@@ -33,143 +46,234 @@ const Marketplace = () => {
     fetchProducts();
   }, []);
 
+  // --- LOGIKA KONFIRMASI KERANJANG ---
+  const handleConfirmAdd = () => {
+    const cart = JSON.parse(localStorage.getItem("roadfix_cart")) || [];
+    const exist = cart.find((i) => i.id === selectedProduct.id);
+
+    if (exist) {
+      exist.quantity += qty;
+    } else {
+      cart.push({
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        price: selectedProduct.price,
+        image: selectedProduct.image_url,
+        shop_name: selectedProduct.shop_name || "RoadFix Official Store",
+        quantity: qty,
+      });
+    }
+
+    localStorage.setItem("roadfix_cart", JSON.stringify(cart));
+
+    // Trigger update ke Header secara real-time
+    window.dispatchEvent(new Event("cartUpdated"));
+
+    setShowCartPopup(false);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
+
   const filteredProducts = products.filter((item) => {
-    const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSearch = item.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     const matchFilter = filter === "Semua" || item.category === filter;
     return matchSearch && matchFilter;
   });
 
-  // Format Rupiah standar Shopee (Rp xxx.xxx)
-  const formatRupiah = (angka) => {
-    return new Intl.NumberFormat("id-ID", {
+  const formatRupiah = (angka) =>
+    new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
     }).format(angka);
-  };
 
   return (
-    <section id="marketplace" className="py-4 relative w-full bg-[#030712] min-h-screen pt-20">
-      <div className="max-w-[1200px] mx-auto px-2 md:px-4">
-        
-        {/* ================= HEADER PENCARIAN & TOMBOL JUAL ================= */}
-        <div className="sticky top-16 md:top-20 z-30 mb-4 bg-[#030712] pt-2 pb-2">
-          <div className="flex items-center gap-2">
-            
-            {/* Search Box */}
+    <section className="py-4 w-full bg-[#030712] min-h-screen pt-20 overflow-x-hidden">
+      {/* ================= ALERT SUKSES ================= */}
+      <AnimatePresence>
+        {showAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none"
+          >
+            <div className="bg-gray-900/95 backdrop-blur-xl border border-cyan-500/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center gap-3">
+              <FaCheckCircle className="text-cyan-400 text-xl" />
+              <span className="text-sm font-bold text-white">
+                Berhasil masuk keranjang!
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= MODAL KUANTITAS ================= */}
+      <AnimatePresence>
+        {showCartPopup && selectedProduct && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center px-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCartPopup(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-[#111827] border border-white/10 w-full max-w-sm rounded-3xl p-6 shadow-2xl"
+            >
+              <button
+                onClick={() => setShowCartPopup(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-white"
+              >
+                <FaTimes />
+              </button>
+              <h3 className="text-lg font-bold mb-6 italic text-center text-gray-400 text-xs tracking-widest uppercase">
+                Pilih Jumlah
+              </h3>
+
+              <div className="flex items-center gap-4 mb-8">
+                <img
+                  src={selectedProduct.image_url}
+                  className="w-16 h-16 rounded-xl object-cover"
+                  alt=""
+                />
+                <div>
+                  <p className="text-sm font-medium text-white line-clamp-1">
+                    {selectedProduct.name}
+                  </p>
+                  <p className="text-cyan-400 font-bold">
+                    {formatRupiah(selectedProduct.price)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/5 mb-8">
+                <span className="text-sm text-gray-400 font-bold uppercase tracking-widest text-[10px]">
+                  Jumlah
+                </span>
+                <div className="flex items-center gap-6">
+                  <button
+                    onClick={() => setQty(Math.max(1, qty - 1))}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-white"
+                  >
+                    <FaMinus className="text-xs" />
+                  </button>
+                  <span className="text-xl font-black text-white">{qty}</span>
+                  <button
+                    onClick={() => setQty(qty + 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-white"
+                  >
+                    <FaPlus className="text-xs" />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleConfirmAdd}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-bold uppercase tracking-tighter"
+              >
+                Tambahkan Ke Keranjang
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="max-w-[1400px] mx-auto px-4">
+        {/* SEARCH & FILTER */}
+        <div className="sticky top-16 z-30 mb-6 bg-[#030712]/80 backdrop-blur-md py-4">
+          <div className="flex gap-3">
             <div className="relative flex-grow">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
-                placeholder="Cari di RoadFix..."
+                placeholder="Cari alat atau jasa konstruksi..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-md bg-gray-900 border border-gray-700 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-800 text-sm text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
               />
             </div>
-            
-            {/* Filter */}
-            <select 
-              value={filter} 
+            <select
+              value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-md px-3 py-2 focus:outline-none focus:border-cyan-500 shrink-0"
+              className="bg-gray-900 border border-gray-800 text-sm text-white px-4 py-3 rounded-xl focus:border-cyan-500 transition-all outline-none"
             >
               <option value="Semua">Semua</option>
               <option value="Produk">Produk</option>
               <option value="Jasa">Jasa</option>
             </select>
-
-            {/* Tombol + Jual (Menuju halaman Upload) */}
             <button
-              onClick={() => navigate('/upload')}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-bold rounded-md shadow-lg hover:shadow-cyan-500/30 hover:scale-105 transition-all shrink-0"
+              onClick={() => navigate("/upload")}
+              className="px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center"
             >
-              <FaPlus className="text-xs" /> <span className="hidden sm:inline">Jual</span>
+              <FaPlus />
             </button>
-
           </div>
         </div>
 
-        {/* ================= GRID PRODUK SHOPEE-STYLE (2 Kolom di HP) ================= */}
+        {/* GRID PRODUK */}
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-gray-800 animate-pulse rounded-md"></div>
-            ))}
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 border-4 border-t-cyan-500 border-white/10 rounded-full animate-spin"></div>
           </div>
         ) : (
-          <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-            <AnimatePresence>
-              {filteredProducts.map((product) => (
-                <motion.div
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  key={product.id}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+            {filteredProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="group cursor-pointer bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-cyan-500/40 transition-all shadow-lg"
+              >
+                <div
                   onClick={() => navigate(`/product/${product.id}`)}
-                  className="cursor-pointer group flex flex-col bg-[#1a1d24] border border-gray-800 rounded-md overflow-hidden hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300 shadow-sm"
+                  className="aspect-square bg-gray-800 overflow-hidden"
                 >
-                  {/* GAMBAR PRODUK KOTAK 1:1 */}
-                  <div className="relative aspect-square overflow-hidden bg-gray-800">
-                    <img 
-                      src={product.image_url} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                    {/* Badge Mall / Star */}
-                    <div className="absolute top-0 left-0 bg-cyan-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-br-md shadow-sm">
-                      MALL
-                    </div>
-                  </div>
+                  <img
+                    src={product.image_url}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    alt={product.name}
+                  />
+                </div>
 
-                  {/* INFO PRODUK */}
-                  <div className="p-2 flex flex-col flex-grow">
-                    {/* Judul: 2 Baris Pas */}
-                    <h3 className="text-xs md:text-sm text-gray-200 line-clamp-2 leading-tight h-[34px] mb-2 group-hover:text-cyan-400 transition-colors">
-                      {product.name}
-                    </h3>
-                    
-                    {/* Harga dan Keranjang (Diletakkan di bawah pakai mt-auto) */}
-                    <div className="mt-auto">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="text-cyan-400 font-semibold text-sm md:text-base tracking-tight truncate pr-1">
-                          {formatRupiah(product.price)}
-                        </div>
-                        {/* Ikon Keranjang Mini */}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            alert(`Berhasil masuk keranjang!`);
-                          }}
-                          className="text-gray-400 hover:text-white bg-gray-800 hover:bg-cyan-500 p-1.5 rounded-full transition-colors shrink-0"
-                        >
-                          <FaShoppingCart className="text-[10px] md:text-xs" />
-                        </button>
+                <div className="p-1">
+                  <h3 className="text-[10px] text-gray-200 line-clamp-2">
+                    {product.name}
+                  </h3>
+
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <div className="text-cyan-400 text-xs font-black">
+                        {formatRupiah(product.price)}
                       </div>
-
-                      {/* Info Rating dan Terjual */}
-                      <div className="flex items-center gap-1 text-[9px] md:text-[10px] text-gray-500">
-                        <FaStar className="text-yellow-400 text-[8px] md:text-[10px]" />
-                        <span>{product.average_rating}</span>
-                        <span className="mx-0.5 border-l border-gray-600 h-2"></span>
-                        <span className="truncate">Terjual 10+</span>
+                      <div className="flex items-center text-[10px] text-gray-500 mt-1">
+                        <FaStar className="text-yellow-400 mr-1" />
+                        {product.average_rating || 0}
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
 
-        {/* ================= KOSONG ================= */}
-        {filteredProducts.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center py-20 opacity-60">
-            <FaStore className="text-4xl text-gray-600 mb-2" />
-            <p className="text-gray-400 text-sm">Produk tidak ditemukan.</p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProduct(product);
+                        setQty(1);
+                        setShowCartPopup(true);
+                      }}
+                      className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-inner"
+                    >
+                      <FaShoppingCart className="text-sm" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         )}
       </div>
