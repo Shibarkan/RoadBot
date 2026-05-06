@@ -42,11 +42,8 @@ vec3 hsv2rgb(vec3 c) {
   return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-// ☄️ MULTIPLE COMETS (Lebih Terang & Beragam)
 vec3 Comets(vec2 uv, float t) {
     vec3 col = vec3(0.0);
-    
-    // Komet 1: Cepat & Biru
     float t1 = mod(t * 0.8, 12.0);
     if (t1 < 3.0) {
         float p = t1 / 3.0;
@@ -54,8 +51,6 @@ vec3 Comets(vec2 uv, float t) {
         float d = length(uv - pos);
         col += vec3(0.4, 0.7, 1.0) * (0.05 * uGlowIntensity / d) * smoothstep(0.5, 0.0, d);
     }
-
-    // Komet 2: Lambat & Putih (Lintasan Berbeda)
     float t2 = mod(t * 0.5 + 5.0, 15.0);
     if (t2 < 4.0) {
         float p = t2 / 4.0;
@@ -63,29 +58,22 @@ vec3 Comets(vec2 uv, float t) {
         float d = length(uv - pos);
         col += vec3(0.9, 0.9, 1.0) * (0.04 * uGlowIntensity / d) * smoothstep(0.4, 0.0, d);
     }
-
     return col;
 }
 
-// ✨ BRIGHT STAR LAYER
 vec3 StarLayer(vec2 uv, float seedOffset) {
   vec3 col = vec3(0.0);
   vec2 gv = fract(uv) - 0.5; 
   vec2 id = floor(uv);
-
   for (int y = -1; y <= 1; y++) {
     for (int x = -1; x <= 1; x++) {
       vec2 offset = vec2(float(x), float(y));
       float seed = Hash21(id + offset + seedOffset);
-      
       float hue = fract(uHueShift / 360.0 + seed * 0.4); 
-      vec3 base = hsv2rgb(vec3(hue, uSaturation, 1.0)); // Saturation Full
-      
+      vec3 base = hsv2rgb(vec3(hue, uSaturation, 1.0));
       float twinkle = sin(uTime * 3.0 + seed * 10.0) * 0.5 + 0.5;
-      // Meningkatkan kecerahan partikel
       float star = (0.06 * uGlowIntensity) / length(gv - offset);
       star *= smoothstep(0.6, 0.05, length(gv-offset));
-      
       col += star * base * twinkle * fract(seed * 456.7);
     }
   }
@@ -96,22 +84,28 @@ void main() {
   vec2 focalPx = uFocal * uResolution.xy;
   vec2 baseUv = (vUv * uResolution.xy - focalPx) / uResolution.y;
 
-  // 🕳️ BLACK HOLE DISTORTION
+  // --- LOGIKA BLACK HOLE JOS MANTAP ---
   float d = length(baseUv);
-  vec2 uv = baseUv;
-  float horizon = 0.12; 
   
+  // 1. Berkedut (Pulsation) - Seolah bernapas
+  float pulse = sin(uTime * 2.5) * 0.008 + sin(uTime * 10.0) * 0.002;
+  float horizon = 0.12 + pulse; 
+  
+  vec2 uv = baseUv;
+  
+  // 2. Gravitational Lensing yang lebih kuat
   if (d > horizon) {
-      float distortion = (horizon * 0.4) / (d - horizon + 0.08);
-      uv += normalize(baseUv) * distortion * -0.15; 
+      float distortion = (horizon * 0.6) / (d - horizon + 0.04);
+      uv += normalize(baseUv) * distortion * -0.25; 
   }
 
+  // Efek Rotasi
   float rot = uTime * uRotationSpeed;
   uv *= mat2(cos(rot), -sin(rot), sin(rot), cos(rot));
 
   vec3 finalCol = vec3(0.0);
 
-  // Render Bintang (Multi-Color & High Brightness)
+  // Render Bintang
   for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
     float depth = fract(i + uStarSpeed);
     float scale = mix(14.0 * uDensity, 1.2 * uDensity, depth);
@@ -119,15 +113,25 @@ void main() {
     finalCol += StarLayer(uv * scale + i * 123.4, i) * fade;
   }
 
-  // Tambahkan Komet
   finalCol += Comets(baseUv, uTime);
 
-  // 🌑 EVENT HORIZON & ACCRETION DISK
-  float darkness = smoothstep(horizon, horizon + 0.04, d);
+  // 3. Aura & Accretion Disk yang lebih hidup
+  // Membuat aura berkedut dan tidak rata (Plasma effect)
+  float angle = atan(baseUv.y, baseUv.x);
+  float noise = sin(angle * 5.0 + uTime * 2.0) * 0.1 + 0.9;
+  
+  // Gelap di tengah (Event Horizon)
+  float darkness = smoothstep(horizon, horizon + 0.03, d);
   finalCol *= darkness;
   
-  float accretion = smoothstep(horizon + 0.12, horizon, d) * smoothstep(horizon - 0.02, horizon, d);
-  finalCol += vec3(0.3, 0.6, 1.0) * accretion * 0.6; // Glow disk biru terang
+  // Pendaran Accretion Disk (Cahaya yang ketarik)
+  float accretion = smoothstep(horizon + 0.14, horizon, d) * smoothstep(horizon - 0.05, horizon, d);
+  vec3 diskColor = vec3(0.3, 0.6, 1.0); // Biru cyan elektrik
+  finalCol += diskColor * accretion * 0.8 * noise * uGlowIntensity;
+  
+  // Aura luar tipis (Outer Glow)
+  float outerGlow = exp(-8.0 * (d - horizon)) * smoothstep(horizon, horizon + 0.5, d);
+  finalCol += vec3(0.1, 0.2, 0.5) * outerGlow * 0.4 * uGlowIntensity;
 
   gl_FragColor = vec4(finalCol, uTransparent ? min(length(finalCol) * 2.2, 1.0) : 1.0);
 }
@@ -139,11 +143,11 @@ export default function Galaxy({
   density = 0.9,
   hueShift = 210,
   speed = 1.0,
-  glowIntensity = 1.2, // Default ditingkatkan agar lebih terang
+  glowIntensity = 1.2,
   saturation = 0.8,
   rotationSpeed = 0.03,
   transparent = true,
-  resolutionScale = 0.6, // Resolusi sedikit dinaikkan agar partikel lebih tajam
+  resolutionScale = 0.6,
   ...rest
 }) {
   const ctnDom = useRef(null);
