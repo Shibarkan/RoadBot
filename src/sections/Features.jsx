@@ -6,100 +6,109 @@ const Features = () => {
   const features = [
     {
       id: 1,
-      icon: <FaWifi className="text-4xl text-blue-400 mb-4 group-hover:text-cyan-300 transition-colors duration-300" />,
-      title: "1. Pemantauan IoT Real-Time",
-      description:
-        "Mengumpulkan data kondisi jalan melalui sensor getaran pada kendaraan, kamera pemantau, dan smartphone secara langsung.",
+      icon: <FaWifi />,
+      step: "01",
+      title: "IoT Real-Time",
+      description: "Sensor getaran dan kamera smartphone menangkap data kerusakan jalan secara instan.",
+      color: "from-blue-500 to-cyan-400",
     },
     {
       id: 2,
-      icon: <FaBrain className="text-4xl text-blue-400 mb-4 group-hover:text-cyan-300 transition-colors duration-300" />,
-      title: "2. Analisis AI & Cloud Server",
-      description:
-        "Data dikirim ke server dan dianalisis menggunakan Artificial Intelligence untuk menentukan lokasi dan tingkat keparahan secara akurat.",
+      icon: <FaBrain />,
+      step: "02",
+      title: "AI Analysis",
+      description: "Cloud server menganalisis tingkat keparahan dan menentukan prioritas perbaikan.",
+      color: "from-purple-500 to-blue-400",
     },
     {
       id: 3,
-      icon: <FaCogs className="text-4xl text-blue-400 mb-4 group-hover:text-cyan-300 transition-colors duration-300" />,
-      title: "3. Robot Perbaikan Otomatis",
-      description:
-        "Robot aktuator menerima koordinat, menuju lokasi, melakukan pemindaian area, dan menambal jalan secara otomatis.",
+      icon: <FaCogs />,
+      step: "03",
+      title: "Auto Repair",
+      description: "Robot aktuator bergerak ke lokasi dan menambal jalan dengan material cepat kering.",
+      color: "from-cyan-500 to-emerald-400",
     },
   ];
 
-  // Variasi animasi container (Induk)
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15, // Muncul satu per satu dengan cepat
-      },
-    },
-  };
-
-  // Variasi animasi kartu (Anak)
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.5, ease: "easeOut" } 
-    },
-  };
-
   return (
-    <section id="cara-kerja" className="py-20 relative z-10 overflow-hidden">
+    <section id="cara-kerja" className="py-24 relative z-10 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         
         {/* JUDUL SECTION */}
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Bagaimana <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">RoadFix AI</span> Bekerja?
+          <h2 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tighter">
+            Alur Kerja <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">RoadFix AI</span>
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            Sistem terintegrasi dari hulu ke hilir untuk mendeteksi dan memperbaiki infrastruktur secara cerdas.
+          <div className="h-1.5 w-24 bg-gradient-to-r from-blue-500 to-cyan-400 mx-auto rounded-full mb-6"></div>
+          <p className="text-gray-400 max-w-xl mx-auto text-lg leading-relaxed">
+            Teknologi cerdas untuk infrastruktur masa depan yang lebih aman dan efisien.
           </p>
         </motion.div>
 
-        {/* GRID CARDS (Mirip Grid Marketplace) */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
-        >
-          {features.map((feature) => (
-            <motion.div
-              variants={itemVariants}
-              key={feature.id}
-              className="relative group bg-[#1a1d24]/60 backdrop-blur-md border border-gray-800 p-8 rounded-3xl hover:border-cyan-400/50 transition-all duration-300 overflow-hidden shadow-lg"
-            >
-              {/* Efek Glow di belakang kartu saat hover */}
-              <div className="absolute -inset-1 bg-cyan-500/10 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
-              
-              {/* Konten Card */}
-              <div className="relative z-10 flex flex-col items-center text-center">
-                <div className="transform group-hover:scale-110 transition-transform duration-300">
-                  {feature.icon}
+        {/* GRID LAYOUT DENGAN GARIS PENGHUBUNG */}
+        <div className="relative">
+          {/* Garis Dekoratif (Hanya muncul di Desktop) */}
+          <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gray-800 -z-10 -translate-y-1/2"></div>
+
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={{
+              visible: { transition: { staggerChildren: 0.2 } }
+            }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-12"
+          >
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.id}
+                variants={{
+                  hidden: { opacity: 0, scale: 0.8 },
+                  visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } }
+                }}
+                className="relative group"
+              >
+                {/* Nomor Urut Besar di Background */}
+                <span className="absolute -top-10 -left-4 text-8xl font-black text-white/[0.03] pointer-events-none group-hover:text-cyan-500/10 transition-colors duration-500">
+                  {feature.step}
+                </span>
+
+                <div className="relative z-10 bg-[#1a1d24]/40 backdrop-blur-xl border border-gray-800 p-8 rounded-[2.5rem] hover:border-cyan-500/50 transition-all duration-500 shadow-2xl h-full flex flex-col items-center text-center">
+                  
+                  {/* Icon Container dengan Glow sesuai tema warna */}
+                  <div className={`p-5 rounded-2xl bg-gradient-to-br ${feature.color} shadow-lg mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
+                    <div className="text-3xl text-white">
+                      {feature.icon}
+                    </div>
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-cyan-300 transition-colors">
+                    {feature.title}
+                  </h3>
+                  
+                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+                    {feature.description}
+                  </p>
+
+                  {/* Indikator Panah Mobile */}
+                  {index < 2 && (
+                    <div className="md:hidden mt-8 text-cyan-500 animate-bounce">
+                      ↓
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-cyan-300 transition-colors duration-300">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-400 leading-relaxed text-sm md:text-base group-hover:text-gray-300 transition-colors duration-300">
-                  {feature.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+
+                {/* Dot Konektor di Desktop */}
+                <div className="hidden md:block absolute top-1/2 -right-6 w-3 h-3 bg-cyan-500 rounded-full shadow-[0_0_15px_#06b6d4] -translate-y-1/2 z-20 group-last:hidden"></div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
 
       </div>
     </section>
