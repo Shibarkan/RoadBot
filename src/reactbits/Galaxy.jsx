@@ -11,43 +11,29 @@ void main() {
 }
 `;
 
-// Pakai mediump agar lebih ringan di GPU HP/Laptop standar
 const fragmentShader = `
 precision mediump float; 
 
 uniform float uTime;
 uniform vec3 uResolution;
 uniform vec2 uFocal;
-uniform vec2 uRotation;
 uniform float uStarSpeed;
 uniform float uDensity;
 uniform float uHueShift;
 uniform float uSpeed;
-uniform vec2 uMouse;
 uniform float uGlowIntensity;
 uniform float uSaturation;
-uniform bool uMouseRepulsion;
-uniform float uTwinkleIntensity;
 uniform float uRotationSpeed;
-uniform float uRepulsionStrength;
-uniform float uMouseActiveFactor;
-uniform float uAutoCenterRepulsion;
 uniform bool uTransparent;
 
 varying vec2 vUv;
 
-#define NUM_LAYER 2.0
-#define MAT45 mat2(0.7071, -0.7071, 0.7071, 0.7071)
+#define NUM_LAYER 4.0
 
 float Hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
   return fract(p.x * p.y);
-}
-
-float tris(float x) {
-  float t = fract(x);
-  return 1.0 - smoothstep(0.0, 1.0, abs(2.0 * t - 1.0));
 }
 
 vec3 hsv2rgb(vec3 c) {
@@ -56,14 +42,33 @@ vec3 hsv2rgb(vec3 c) {
   return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-float Star(vec2 uv, float flare) {
-  float d = length(uv);
-  float m = (0.05 * uGlowIntensity) / d;
-  m *= smoothstep(1.0, 0.2, d);
-  return m;
+// ☄️ MULTIPLE COMETS (Lebih Terang & Beragam)
+vec3 Comets(vec2 uv, float t) {
+    vec3 col = vec3(0.0);
+    
+    // Komet 1: Cepat & Biru
+    float t1 = mod(t * 0.8, 12.0);
+    if (t1 < 3.0) {
+        float p = t1 / 3.0;
+        vec2 pos = mix(vec2(-1.5, 0.8), vec2(1.5, -0.5), p);
+        float d = length(uv - pos);
+        col += vec3(0.4, 0.7, 1.0) * (0.05 * uGlowIntensity / d) * smoothstep(0.5, 0.0, d);
+    }
+
+    // Komet 2: Lambat & Putih (Lintasan Berbeda)
+    float t2 = mod(t * 0.5 + 5.0, 15.0);
+    if (t2 < 4.0) {
+        float p = t2 / 4.0;
+        vec2 pos = mix(vec2(1.5, 0.5), vec2(-1.5, 0.2), p);
+        float d = length(uv - pos);
+        col += vec3(0.9, 0.9, 1.0) * (0.04 * uGlowIntensity / d) * smoothstep(0.4, 0.0, d);
+    }
+
+    return col;
 }
 
-vec3 StarLayer(vec2 uv) {
+// ✨ BRIGHT STAR LAYER
+vec3 StarLayer(vec2 uv, float seedOffset) {
   vec3 col = vec3(0.0);
   vec2 gv = fract(uv) - 0.5; 
   vec2 id = floor(uv);
@@ -71,15 +76,17 @@ vec3 StarLayer(vec2 uv) {
   for (int y = -1; y <= 1; y++) {
     for (int x = -1; x <= 1; x++) {
       vec2 offset = vec2(float(x), float(y));
-      float seed = Hash21(id + offset);
-      float size = fract(seed * 345.32);
+      float seed = Hash21(id + offset + seedOffset);
       
-      vec3 base = hsv2rgb(vec3(fract(seed + uHueShift / 360.0), uSaturation, 1.0));
-      vec2 pad = vec2(tris(seed * 34.0 + uTime * uSpeed * 0.1), tris(seed * 38.0 + uTime * uSpeed * 0.03)) - 0.5;
-
-      float star = Star(gv - offset - pad, 0.0);
-      star *= mix(1.0, tris(uTime * uSpeed + seed * 6.28), uTwinkleIntensity);
-      col += star * size * base;
+      float hue = fract(uHueShift / 360.0 + seed * 0.4); 
+      vec3 base = hsv2rgb(vec3(hue, uSaturation, 1.0)); // Saturation Full
+      
+      float twinkle = sin(uTime * 3.0 + seed * 10.0) * 0.5 + 0.5;
+      // Meningkatkan kecerahan partikel
+      float star = (0.06 * uGlowIntensity) / length(gv - offset);
+      star *= smoothstep(0.6, 0.05, length(gv-offset));
+      
+      col += star * base * twinkle * fract(seed * 456.7);
     }
   }
   return col;
@@ -87,36 +94,56 @@ vec3 StarLayer(vec2 uv) {
 
 void main() {
   vec2 focalPx = uFocal * uResolution.xy;
-  vec2 uv = (vUv * uResolution.xy - focalPx) / uResolution.y;
+  vec2 baseUv = (vUv * uResolution.xy - focalPx) / uResolution.y;
 
-  // Auto Rotation
+  // 🕳️ BLACK HOLE DISTORTION
+  float d = length(baseUv);
+  vec2 uv = baseUv;
+  float horizon = 0.12; 
+  
+  if (d > horizon) {
+      float distortion = (horizon * 0.4) / (d - horizon + 0.08);
+      uv += normalize(baseUv) * distortion * -0.15; 
+  }
+
   float rot = uTime * uRotationSpeed;
   uv *= mat2(cos(rot), -sin(rot), sin(rot), cos(rot));
 
-  vec3 col = vec3(0.0);
+  vec3 finalCol = vec3(0.0);
+
+  // Render Bintang (Multi-Color & High Brightness)
   for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
     float depth = fract(i + uStarSpeed);
-    float scale = mix(15.0 * uDensity, 0.5 * uDensity, depth);
-    col += StarLayer(uv * scale + i * 453.3) * depth;
+    float scale = mix(14.0 * uDensity, 1.2 * uDensity, depth);
+    float fade = depth * smoothstep(1.0, 0.7, depth);
+    finalCol += StarLayer(uv * scale + i * 123.4, i) * fade;
   }
 
-  gl_FragColor = vec4(col, uTransparent ? min(length(col), 1.0) : 1.0);
+  // Tambahkan Komet
+  finalCol += Comets(baseUv, uTime);
+
+  // 🌑 EVENT HORIZON & ACCRETION DISK
+  float darkness = smoothstep(horizon, horizon + 0.04, d);
+  finalCol *= darkness;
+  
+  float accretion = smoothstep(horizon + 0.12, horizon, d) * smoothstep(horizon - 0.02, horizon, d);
+  finalCol += vec3(0.3, 0.6, 1.0) * accretion * 0.6; // Glow disk biru terang
+
+  gl_FragColor = vec4(finalCol, uTransparent ? min(length(finalCol) * 2.2, 1.0) : 1.0);
 }
 `;
 
 export default function Galaxy({
   focal = [0.5, 0.5],
-  rotation = [1.0, 0.0],
-  starSpeed = 0.5,
-  density = 1,
-  hueShift = 140,
+  starSpeed = 0.4,
+  density = 0.9,
+  hueShift = 210,
   speed = 1.0,
-  mouseInteraction = false, // Matikan jika tidak perlu banget
-  glowIntensity = 0.3,
-  saturation = 0.5,
-  rotationSpeed = 0.05,
+  glowIntensity = 1.2, // Default ditingkatkan agar lebih terang
+  saturation = 0.8,
+  rotationSpeed = 0.03,
   transparent = true,
-  resolutionScale = 0.5, // Rahasia kencang: Render di 50% resolusi asli
+  resolutionScale = 0.6, // Resolusi sedikit dinaikkan agar partikel lebih tajam
   ...rest
 }) {
   const ctnDom = useRef(null);
@@ -125,24 +152,15 @@ export default function Galaxy({
   useEffect(() => {
     if (!ctnDom.current) return;
     const ctn = ctnDom.current;
-    
-    // Renderer dengan powerPreference untuk memaksa GPU high-performance jika ada
-    const renderer = new Renderer({
-      alpha: transparent,
-      premultipliedAlpha: false,
-      powerPreference: "high-performance"
-    });
+    const renderer = new Renderer({ alpha: transparent, premultipliedAlpha: false, powerPreference: "high-performance" });
     const gl = renderer.gl;
 
     function resize() {
-      // Kita kecilkan ukuran canvas aslinya, tapi ditarik CSS
       renderer.setSize(ctn.offsetWidth * resolutionScale, ctn.offsetHeight * resolutionScale);
       gl.canvas.style.width = '100%';
       gl.canvas.style.height = '100%';
       if (programRef.current) {
-        programRef.current.uniforms.uResolution.value = new Color(
-          gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height
-        );
+        programRef.current.uniforms.uResolution.value = new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height);
       }
     }
 
@@ -154,7 +172,6 @@ export default function Galaxy({
         uTime: { value: 0 },
         uResolution: { value: new Color(1, 1, 1) },
         uFocal: { value: new Float32Array(focal) },
-        uRotation: { value: new Float32Array(rotation) },
         uStarSpeed: { value: 0 },
         uDensity: { value: density },
         uHueShift: { value: hueShift },
@@ -169,7 +186,6 @@ export default function Galaxy({
 
     const mesh = new Mesh(gl, { geometry, program });
     let animateId;
-
     const update = (t) => {
       animateId = requestAnimationFrame(update);
       program.uniforms.uTime.value = t * 0.001;
@@ -188,7 +204,7 @@ export default function Galaxy({
       ctn.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, []); // Kosongkan agar tidak restart terus menerus
+  }, []);
 
-  return <div ref={ctnDom} className="w-full h-full absolute inset-0" {...rest} />;
+  return <div ref={ctnDom} className="w-full h-full absolute inset-0 -z-10" {...rest} />;
 }
