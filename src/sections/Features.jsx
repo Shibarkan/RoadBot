@@ -96,7 +96,7 @@ const Features = () => {
                   {feature.step}
                 </span>
 
-                <div className="relative z-10 bg-[#1a1d24]/40 backdrop-blur-xl border border-gray-800 p-8 rounded-[2.5rem] hover:border-cyan-500/50 transition-all duration-500 shadow-2xl h-full flex flex-col items-center text-center group-hover:-translate-y-4">
+                <div className="relative z-10 bg-[#1a1d24]/40 backdrop-blur-xl border border-gray-800 p-8 rounded-[2.5rem] hover:border-cyan-500/50 transition-all duration-400 shadow-2xl h-full flex flex-col items-center text-center group-hover:-translate-y-4">
                   
                   {/* ICON CONTAINER: RANDOMIZED AUTOMATIC SPIN */}
                   <div className="perspective-1000 mb-6">

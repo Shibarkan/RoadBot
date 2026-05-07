@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaRobot, FaPlus, FaShoppingCart } from "react-icons/fa"; // Tambahkan FaShoppingCart
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChevronRight } from 'lucide-react';
+
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,8 +54,8 @@ const Header = () => {
   };
 
   const menuItems = [
-    { name: "Home", path: "/" },
-    { name: "Marketplace", path: "/marketplace" },
+    { name: "Beranda ", path: "/" },
+    { name: "Produk", path: "/marketplace" },
     { name: "Cara Kerja", path: "/#cara-kerja" },
   ];
 
@@ -151,7 +153,7 @@ const Header = () => {
               className="flex items-center justify-between px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all"
             >
               <span className="font-medium">{item.name}</span>
-              <FaShoppingCart className={location.pathname === "/cart" ? "text-cyan-400" : ""} />
+              <ChevronRight className={location.pathname === "/cart" ? "text-cyan-400" : ""} />
             </Link>
           ))}
           <div className="pt-6 pb-4 px-2 flex flex-col gap-3">
