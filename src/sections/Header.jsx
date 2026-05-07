@@ -157,8 +157,8 @@ const Header = () => {
             </Link>
           ))}
           <div className="pt-6 pb-4 px-2 flex flex-col gap-3">
-            <Link to="/cart" onClick={() => setIsOpen(false)} className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-bold flex justify-center items-center gap-2">
-               <FaShoppingCart /> Lihat Keranjang ({cartCount})
+            <Link to="/marketplace" onClick={() => setIsOpen(false)} className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-bold flex justify-center items-center gap-2">
+                Belanja Sekarang
             </Link>
             <Link to="/upload" onClick={() => setIsOpen(false)} className="w-full py-3 bg-white/5 border border-white/20 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2">
               <FaPlus className="text-cyan-400" /> Jual Produk

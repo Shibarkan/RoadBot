@@ -378,7 +378,7 @@ const ProductDetail = () => {
                 <FaShoppingCart /> + Keranjang
               </button>
               <button
-                onClick={() => navigate("/checkout")}
+                onClick={() => alert("BELUM ADA SISRTEM CEO BLOKKK")}
                 className="flex-1 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/20 transition-transform hover:scale-[1.02]"
               >
                 Beli Sekarang
