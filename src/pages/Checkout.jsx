@@ -114,7 +114,7 @@ const Checkout = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-24 left-0 right-0 z- flex justify-center px-4 pointer-events-none"
+            className="fixed top-24 right-0 flex justify-center px-4 pointer-events-none"
           >
             <div className="bg-green-500/90 backdrop-blur-xl border border-green-400 px-6 py-4 rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.4)] flex items-center gap-3">
               <FaCheckCircle className="text-white text-2xl" />
