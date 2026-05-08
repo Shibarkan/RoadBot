@@ -29,7 +29,9 @@ const ProductDetail = () => {
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [qty, setQty] = useState(1);
+  
   const [showQtyModal, setShowQtyModal] = useState(false);
+  const [actionType, setActionType] = useState("cart"); // "cart" atau "buy"
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
@@ -81,13 +83,7 @@ const ProductDetail = () => {
   const confirmAddToCart = () => {
     const cart = JSON.parse(localStorage.getItem("roadfix_cart")) || [];
     const existingIndex = cart.findIndex((item) => item.id === product.id);
-    localStorage.setItem("roadfix_cart", JSON.stringify(cart));
 
-    // TAMBAHKAN BARIS INI:
-    window.dispatchEvent(new Event("cartUpdated"));
-
-    setShowQtyModal(false);
-    setShowAlert(true);
     if (existingIndex > -1) {
       cart[existingIndex].quantity += qty;
     } else {
@@ -102,9 +98,27 @@ const ProductDetail = () => {
     }
 
     localStorage.setItem("roadfix_cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
+
     setShowQtyModal(false);
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
+  };
+
+  const confirmBuyNow = () => {
+    const directBuyItem = [{
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url,
+      shop_name: product.shop_name || "RoadFix Official Store",
+      quantity: qty,
+    }];
+    
+    localStorage.setItem("roadfix_direct_buy", JSON.stringify(directBuyItem));
+    
+    setShowQtyModal(false);
+    navigate("/checkout?mode=direct"); 
   };
 
   const formatRupiah = (angka) =>
@@ -123,98 +137,7 @@ const ProductDetail = () => {
 
   return (
     <div className="bg-[#030712] min-h-screen pb-24 md:pb-12 text-white overflow-x-hidden">
-      {/* ALERT SUKSES */}
-      <AnimatePresence>
-        {showAlert && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none"
-          >
-            <div className="bg-gray-900/95 backdrop-blur-xl border border-cyan-500/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center gap-3">
-              <FaCheckCircle className="text-cyan-400 text-xl" />
-              <span className="text-sm font-bold">Produk masuk keranjang!</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* MODAL KUANTITAS */}
-      <AnimatePresence>
-        {showQtyModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center px-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowQtyModal(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-[#111827] border border-white/10 w-full max-w-sm rounded-3xl p-6 shadow-2xl"
-            >
-              <button
-                onClick={() => setShowQtyModal(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-white"
-              >
-                <FaTimes />
-              </button>
-              <h3 className="text-lg font-bold mb-6 italic text-center text-gray-400 text-xs tracking-widest uppercase">
-                Pilih Jumlah
-              </h3>
-
-              <div className="flex items-center gap-4 mb-8">
-                <img
-                  src={product.image_url}
-                  className="w-16 h-16 rounded-xl object-cover"
-                  alt=""
-                />
-                <div>
-                  <p className="text-sm font-medium line-clamp-1">
-                    {product.name}
-                  </p>
-                  <p className="text-cyan-400 font-bold">
-                    {formatRupiah(product.price)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/5 mb-8">
-                <span className="text-sm text-gray-400 font-bold uppercase tracking-widest text-[10px]">
-                  Jumlah
-                </span>
-                <div className="flex items-center gap-6">
-                  <button
-                    onClick={() => setQty(Math.max(1, qty - 1))}
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800"
-                  >
-                    <FaMinus className="text-xs" />
-                  </button>
-                  <span className="text-xl font-black">{qty}</span>
-                  <button
-                    onClick={() => setQty(qty + 1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800"
-                  >
-                    <FaPlus className="text-xs" />
-                  </button>
-                </div>
-              </div>
-
-              <button
-                onClick={confirmAddToCart}
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-bold uppercase tracking-tighter"
-              >
-                Konfirmasi
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
+      
       {/* HEADER NAVIGATION */}
       <div className="sticky top-0 z-40 bg-[#030712]/80 backdrop-blur-lg px-4 py-3 border-b border-white/10 md:pt-24 md:border-none">
         <div className="max-w-6xl mx-auto flex items-center gap-4">
@@ -231,7 +154,7 @@ const ProductDetail = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 mt-6 md:mt-12">
-        {/* ================= AREA IKLAN (BANNER ORANYE) ================= */}
+        {/* AREA IKLAN (BANNER ORANYE) */}
         <div className="w-full h-20 md:h-28 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl md:rounded-3xl mb-10 flex items-center px-6 md:px-10 relative overflow-hidden group shadow-[0_10px_30px_rgba(249,115,22,0.2)]">
           <div className="z-10">
             <div className="flex items-center gap-2 text-white mb-1">
@@ -244,27 +167,21 @@ const ProductDetail = () => {
               Diskon Hingga 20% Hari Ini!
             </h3>
             <p className="text-orange-100 text-[8px] md:text-xs font-medium">
-              Gunakan kode{" "}
-              <span className="bg-white/20 px-2 py-0.5 rounded text-white font-bold">
-                ROADFIX2026
-              </span>{" "}
-              saat checkout.
+              Gunakan kode <span className="bg-white/20 px-2 py-0.5 rounded text-white font-bold">ROADFIX2026</span> saat checkout.
             </p>
           </div>
-          <div className="absolute right-0 top-0 h-full w-1/3 bg-white/10 -skew-x-12 translate-x-12 transition-transform group-hover:translate-x-8" />
           <FaStore className="absolute right-6 md:right-10 text-6xl md:text-8xl text-black/10 -rotate-12 group-hover:scale-110 transition-transform" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-12 mb-12">
+          
           {/* FOTO PRODUK */}
-          <div className="flex flex-col relative bg-gray-900 md:bg-transparent">
-            <div className="relative w-full h-[45vh] md:h-auto md:aspect-square bg-gray-800 md:rounded-3xl overflow-hidden shadow-2xl border border-white/5">
+          <div className="flex flex-col relative z-0 bg-gray-900 md:bg-transparent">
+            <div className="relative w-full h-[45vh] md:h-auto md:aspect-square bg-gray-800 md:rounded-3xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center p-2">
               <div
                 id="image-slider"
                 onScroll={(e) =>
-                  setCurrentIndex(
-                    Math.round(e.target.scrollLeft / e.target.offsetWidth),
-                  )
+                  setCurrentIndex(Math.round(e.target.scrollLeft / e.target.offsetWidth))
                 }
                 className="flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar scroll-smooth"
               >
@@ -272,24 +189,22 @@ const ProductDetail = () => {
                   <img
                     key={index}
                     src={img}
-                    className="w-full h-full flex-shrink-0 snap-center object-cover"
+                    className="w-full h-full flex-shrink-0 snap-center object-contain"
                     alt=""
                   />
                 ))}
               </div>
 
-              <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-[10px] font-black px-2.5 py-1 rounded-sm shadow-lg">
+              <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-[10px] font-black px-2.5 py-1 rounded-sm shadow-lg z-10">
                 MALL
               </div>
 
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40 px-2 py-1.5 rounded-full backdrop-blur-md">
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40 px-2 py-1.5 rounded-full backdrop-blur-md z-10">
                 {images.map((_, index) => (
                   <div
                     key={index}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      index === currentIndex
-                        ? "w-3.5 bg-cyan-400"
-                        : "w-1.5 bg-white/40"
+                      index === currentIndex ? "w-3.5 bg-cyan-400" : "w-1.5 bg-white/40"
                     }`}
                   />
                 ))}
@@ -314,21 +229,16 @@ const ProductDetail = () => {
                     key={index}
                     onClick={() => {
                       const slider = document.getElementById("image-slider");
-                      if (slider)
-                        slider.scrollLeft = index * slider.offsetWidth;
+                      if (slider) slider.scrollLeft = index * slider.offsetWidth;
                       setCurrentIndex(index);
                     }}
-                    className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                    className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl bg-gray-800 overflow-hidden border-2 transition-all p-1 ${
                       index === currentIndex
                         ? "border-cyan-400 scale-95"
                         : "border-transparent opacity-40 hover:opacity-100"
                     }`}
                   >
-                    <img
-                      src={img}
-                      className="w-full h-full object-cover"
-                      alt=""
-                    />
+                    <img src={img} className="w-full h-full object-contain" alt="" />
                   </button>
                 ))}
               </div>
@@ -356,30 +266,22 @@ const ProductDetail = () => {
                 <span className="font-bold text-white underline decoration-yellow-400 mr-1">
                   {product?.average_rating || 0}
                 </span>
-                <FaStar />{" "}
-                <span className="text-gray-500">
-                  ({product?.rating_count || 0})
-                </span>
+                <FaStar /> <span className="text-gray-500">({product?.rating_count || 0})</span>
               </div>
-              <div className="pl-3">
-                <span className="text-white font-medium">
-                  {product?.sold || 0}
-                </span>{" "}
-                Terjual
-              </div>
+              <div className="pl-3"><span className="text-white font-medium">{product?.sold || 0}</span> Terjual</div>
               <div className="pl-3">Stok: {product?.stock}</div>
             </div>
 
             <div className="hidden md:flex gap-4 mt-auto">
               <button
-                onClick={() => setShowQtyModal(true)}
-                className="flex-1 py-4 rounded-xl border border-cyan-500 bg-cyan-500/10 text-cyan-400 font-bold flex items-center justify-center gap-2 transition-all hover:bg-cyan-500/20 shadow-lg shadow-cyan-500/5"
+                onClick={() => { setActionType("cart"); setShowQtyModal(true); }}
+                className="flex-1 py-4 rounded-xl border border-cyan-500 bg-cyan-500/10 text-cyan-400 font-bold flex items-center justify-center gap-2 transition-all hover:bg-cyan-500/20 shadow-lg"
               >
                 <FaShoppingCart /> + Keranjang
               </button>
               <button
-                onClick={() => alert("BELUM ADA SISRTEM CEO BLOKKK")}
-                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/20 transition-transform hover:scale-[1.02]"
+                onClick={() => { setActionType("buy"); setShowQtyModal(true); }}
+                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-lg hover:scale-[1.02] transition-transform"
               >
                 Beli Sekarang
               </button>
@@ -394,12 +296,9 @@ const ProductDetail = () => {
               <FaShieldAlt />
             </div>
             <div>
-              <h4 className="text-white font-bold mb-1 uppercase tracking-tighter text-sm">
-                Proteksi RoadFix AI
-              </h4>
+              <h4 className="text-white font-bold mb-1 uppercase tracking-tighter text-sm">Proteksi RoadFix AI</h4>
               <p className="text-[11px] text-gray-400 leading-relaxed italic">
-                Setiap unit produk dilindungi garansi resmi dan dukungan teknisi
-                RoadFix AI 24/7 untuk memastikan kelancaran infrastruktur Anda.
+                Setiap unit produk dilindungi garansi resmi dan dukungan teknisi RoadFix AI 24/7.
               </p>
             </div>
           </div>
@@ -409,21 +308,13 @@ const ProductDetail = () => {
               <div className="w-1 h-6 bg-cyan-400 rounded-full" /> Detail Produk
             </h2>
             <div className="text-gray-400 text-sm md:text-base leading-relaxed whitespace-pre-line bg-[#111827]/50 p-6 rounded-3xl border border-white/5 shadow-inner">
-              Kategori:{" "}
-              <span className="text-cyan-400 font-bold uppercase tracking-widest text-xs ml-2">
-                {product?.category}
-              </span>
-              <br />
-              <br />
+              Kategori: <span className="text-cyan-400 font-bold uppercase tracking-widest text-xs ml-2">{product?.category}</span>
+              <br /><br />
               {product?.description}
-              <br />
-              <br />
-              * Garansi resmi RoadFix AI selama 1 Tahun.
-              <br />
-              * Pemasangan dan instalasi software sudah termasuk dalam paket
-              pembelian.
-              <br />* Pengiriman unit robot dilakukan menggunakan armada khusus
-              kami.
+              <br /><br />
+              * Garansi resmi RoadFix AI selama 1 Tahun.<br />
+              * Pemasangan dan instalasi software sudah termasuk dalam paket pembelian.<br />
+              * Pengiriman unit robot dilakukan menggunakan armada khusus kami.
             </div>
           </div>
         </div>
@@ -431,38 +322,19 @@ const ProductDetail = () => {
         {/* REKOMENDASI PRODUK */}
         <div className="mb-16">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-white tracking-tight italic">
-              Rekomendasi Lainnya
-            </h2>
-            <Link
-              to="/marketplace"
-              className="text-cyan-400 text-xs font-bold hover:underline tracking-widest uppercase"
-            >
-              Lihat Semua
-            </Link>
+            <h2 className="text-2xl font-bold text-white tracking-tight italic">Rekomendasi Lainnya</h2>
+            <Link to="/marketplace" className="text-cyan-400 text-xs font-bold hover:underline tracking-widest uppercase">Lihat Semua</Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {relatedProducts.map((rel) => (
-              <Link
-                to={`/product/${rel.id}`}
-                key={rel.id}
-                className="bg-gray-900/50 border border-white/5 rounded-3xl overflow-hidden hover:border-cyan-400/40 transition-all group flex flex-col shadow-lg"
-              >
-                <div className="aspect-square overflow-hidden bg-gray-800">
-                  <img
-                    src={rel.image_url}
-                    alt={rel.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+              <Link to={`/product/${rel.id}`} key={rel.id} className="bg-gray-900/50 border border-white/5 rounded-3xl overflow-hidden hover:border-cyan-400/40 transition-all group flex flex-col shadow-lg">
+                <div className="aspect-square overflow-hidden bg-gray-800 p-2 flex justify-center items-center">
+                  <img src={rel.image_url} alt={rel.name} className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div className="p-4 flex-grow flex flex-col justify-between">
-                  <h3 className="text-[11px] text-gray-300 line-clamp-1 mb-2 font-medium">
-                    {rel.name}
-                  </h3>
-                  <div className="text-cyan-400 font-black text-xs">
-                    {formatRupiah(rel.price)}
-                  </div>
+                  <h3 className="text-[11px] text-gray-300 line-clamp-1 mb-2 font-medium">{rel.name}</h3>
+                  <div className="text-cyan-400 font-black text-xs">{formatRupiah(rel.price)}</div>
                 </div>
               </Link>
             ))}
@@ -471,25 +343,100 @@ const ProductDetail = () => {
       </div>
 
       {/* MOBILE BAR */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-[#030712]/95 backdrop-blur-xl border-t border-white/10 z-50 flex pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-[#030712]/95 backdrop-blur-xl border-t border-white/10 z- flex pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
         <button className="flex flex-col items-center justify-center w-1/4 py-3 bg-gray-900 text-gray-400 border-r border-white/5">
           <FaStore className="text-xl mb-1" />
           <span className="text-[9px] font-bold">Toko</span>
         </button>
         <button
-          onClick={() => setShowQtyModal(true)}
+          onClick={() => { setActionType("cart"); setShowQtyModal(true); }}
           className="w-1/4 py-3 bg-gray-900 text-gray-400 flex flex-col items-center justify-center border-r border-white/5"
         >
           <FaShoppingCart className="text-xl mb-1" />
           <span className="text-[9px] font-bold">Keranjang</span>
         </button>
         <button
-          onClick={() => navigate("/checkout")}
+          onClick={() => { setActionType("buy"); setShowQtyModal(true); }}
           className="w-2/4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-black text-xs uppercase tracking-tighter"
         >
           Beli Sekarang
         </button>
       </div>
+
+      {/* ================= MODAL KUANTITAS & ALERT (DIPINDAH KE PALING BAWAH AGAR SELALU DI DEPAN) ================= */}
+      <AnimatePresence>
+        {showQtyModal && (
+          <div className="fixed inset-0 z- flex items-center justify-center px-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowQtyModal(false)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            />
+            {/* Modal Box dengan max-height agar responsive di HP kecil */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 50 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 50 }}
+              className="relative bg-[#111827] border border-white/10 w-full max-w-sm rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto"
+            >
+              <button onClick={() => setShowQtyModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+                <FaTimes size={20} />
+              </button>
+              
+              <h3 className="text-center text-gray-400 text-[10px] font-black tracking-[0.2em] uppercase mb-6">
+                {actionType === "cart" ? "Tambah ke Keranjang" : "Beli Langsung"}
+              </h3>
+
+              <div className="flex items-center gap-4 mb-8 bg-white/5 p-3 rounded-2xl border border-white/5">
+                <div className="w-16 h-16 bg-gray-800 rounded-xl overflow-hidden flex items-center justify-center p-1">
+                  <img src={product.image_url} className="max-w-full max-h-full object-contain" alt="" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{product.name}</p>
+                  <p className="text-cyan-400 font-black text-sm">{formatRupiah(product.price)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/5 mb-8">
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">Jumlah</span>
+                <div className="flex items-center gap-4 sm:gap-6">
+                  <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors text-white">
+                    <FaMinus size={12} />
+                  </button>
+                  <span className="text-2xl font-black tabular-nums">{qty}</span>
+                  <button onClick={() => setQty(qty + 1)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors text-white">
+                    <FaPlus size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (actionType === "cart") confirmAddToCart();
+                  else confirmBuyNow();
+                }}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-cyan-500/20 active:scale-95 transition-all"
+              >
+                {actionType === "cart" ? "Konfirmasi" : "Bayar Sekarang"}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ALERT SUKSES */}
+      <AnimatePresence>
+        {showAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="fixed top-24 left-0 right-0 z- flex justify-center px-4 pointer-events-none"
+          >
+            <div className="bg-gray-900/95 backdrop-blur-xl border border-cyan-500/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center gap-3">
+              <FaCheckCircle className="text-cyan-400 text-xl" />
+              <span className="text-sm font-bold uppercase tracking-tight">Berhasil Masuk Keranjang!</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

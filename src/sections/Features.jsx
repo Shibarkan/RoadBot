@@ -1,6 +1,7 @@
 import React from "react";
 import { FaWifi, FaBrain, FaCogs } from "react-icons/fa";
 import { motion } from "framer-motion";
+import Product from "./Product";
 
 const Features = () => {
   const features = [
@@ -138,6 +139,7 @@ const Features = () => {
         </div>
 
       </div>
+      <Product />
     </section>
   );
 };
