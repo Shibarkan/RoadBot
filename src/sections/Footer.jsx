@@ -148,7 +148,7 @@ const Footer = () => {
               {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map((Icon, index) => (
                 <a 
                   key={index} 
-                  href="#" 
+                  href="https://youtu.be/Aq5WXmQQooo?si=k9nKFJM66qSDvQ1e" 
                   className="w-10 h-10 rounded-xl bg-[#0a0f1a] border border-white/5 flex items-center justify-center text-gray-500 hover:bg-cyan-500 hover:text-black hover:border-cyan-500 hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all duration-700 hover:[transform:rotateY(180deg)] shadow-inner group"
                 >
                   <div className="transition-transform duration-700 group-hover:[transform:rotateY(180deg)]">
@@ -162,7 +162,7 @@ const Footer = () => {
           {/* KOLOM 2: TAUTAN CEPAT */}
           <motion.div variants={itemVariants}>
             <h3 className="text-white font-bold text-lg mb-7 relative inline-block tracking-wide">
-              Produk & Solusi
+              Produk & Inovasi
               <span className="absolute -bottom-2.5 left-0 w-12 h-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
             </h3>
             <ul className="space-y-3.5">
@@ -174,7 +174,7 @@ const Footer = () => {
                 "Kawasan Industri"
               ].map((item, idx) => (
                 <li key={idx}>
-                  <a href="#" className="text-gray-400 hover:text-white text-sm flex items-center gap-3 w-max relative group overflow-hidden pb-1">
+                  <a href="https://youtu.be/Aq5WXmQQooo?si=k9nKFJM66qSDvQ1e" className="text-gray-400 hover:text-white text-sm flex items-center gap-3 w-max relative group overflow-hidden pb-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-800 border border-gray-700 group-hover:bg-cyan-400 group-hover:border-cyan-300 transition-all duration-300"></span>
                     <span>{item}</span>
                     <span className="absolute bottom-0 left-0 w-full h-px bg-cyan-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
