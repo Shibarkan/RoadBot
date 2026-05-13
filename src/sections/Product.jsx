@@ -75,7 +75,7 @@ const Product = () => {
           
           <Link 
             to="/marketplace" 
-            className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-cyan-400 transition-colors group"
+            className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-cyan-400 transition-colors group"
           >
             Lihat Semua 
             <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
