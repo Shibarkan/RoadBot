@@ -9,7 +9,9 @@ import {
   FaMapMarkerAlt,
   FaPhoneAlt,
   FaUser,
-  FaShieldAlt
+  FaShieldAlt,
+  FaShippingFast,
+  FaBox
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -30,6 +32,14 @@ const Checkout = () => {
     address: "",
   });
 
+  // --- OPSI PENGIRIMAN LOKAL (JNE, J&T, KARGO) ---
+  const shippingOptions = [
+    { id: "jne_reg", name: "JNE Reguler (REG)", est: "Estimasi 3-5 Hari", cost: 50000, icon: <FaTruck /> },
+    { id: "jnt_exp", name: "J&T Express", est: "Estimasi 1-2 Hari", cost: 150000, icon: <FaShippingFast /> },
+    { id: "indah_kargo", name: "Indah Logistik Kargo", est: "Estimasi 5-7 Hari", cost: 350000, icon: <FaBox /> },
+  ];
+  const [selectedShipping, setSelectedShipping] = useState(shippingOptions); // Default: JNE Reguler
+
   // --- 1. LOAD DATA KERANJANG ---
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -44,8 +54,9 @@ const Checkout = () => {
     }
   }, [mode, navigate]);
 
+  // --- PERHITUNGAN HARGA DINAMIS ---
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const ongkir = 50000; 
+  const ongkir = selectedShipping.cost; // Ongkir menyesuaikan pilihan
   const total = subtotal + ongkir;
 
   const formatRupiah = (angka) =>
@@ -65,15 +76,13 @@ const Checkout = () => {
   const handleSimulatePayment = () => {
     setIsProcessing(true);
 
-    // Simulasi loading 2.5 detik seolah-olah mengecek ke server bank
     setTimeout(() => {
       setIsProcessing(false);
-      setShowSuccess(true); // TAMPILKAN NOTIFIKASI BERHASIL
+      setShowSuccess(true); 
 
       const newOrderId = `RFX-${Math.floor(100000 + Math.random() * 900000)}`;
       setOrderId(newOrderId);
       
-      // Bersihkan Keranjang
       if (mode === "direct") {
         localStorage.removeItem("roadfix_direct_buy");
       } else {
@@ -81,20 +90,17 @@ const Checkout = () => {
         window.dispatchEvent(new Event("cartUpdated"));
       }
 
-      // =======================================================
-      // MENYIMPAN KE RIWAYAT PESANAN DENGAN STATUS "LUNAS"
-      // =======================================================
       const pastHistory = JSON.parse(localStorage.getItem("roadfix_history")) || [];
       const newOrderData = {
         orderId: newOrderId,
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
         total: total,
-        status: "Lunas", // Status langsung Lunas karena ini simulasi
-        items: items
+        status: "Lunas",
+        items: items,
+        shipping: selectedShipping.name 
       };
       localStorage.setItem("roadfix_history", JSON.stringify([newOrderData, ...pastHistory]));
       
-      // Beri jeda 2 detik agar notifikasi terbaca, lalu pindah ke Invoice (Step 3)
       setTimeout(() => {
         setShowSuccess(false);
         setStep(3); 
@@ -114,7 +120,7 @@ const Checkout = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-24 right-0 flex justify-center px-4 pointer-events-none"
+            className="fixed top-24 right-0 left-0 flex justify-center px-4 pointer-events-none z-50"
           >
             <div className="bg-green-500/90 backdrop-blur-xl border border-green-400 px-6 py-4 rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.4)] flex items-center gap-3">
               <FaCheckCircle className="text-white text-2xl" />
@@ -138,31 +144,72 @@ const Checkout = () => {
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-[#111827] border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl">
                 <h2 className="text-xl font-bold flex items-center gap-3 mb-8">
-                  <FaTruck className="text-cyan-400" /> Informasi Pengiriman
+                  <FaMapMarkerAlt className="text-cyan-400" /> Informasi Pengiriman
                 </h2>
-                <form id="form-checkout" onSubmit={handleNextStep} className="space-y-5">
-                  <div className="relative">
-                    <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
-                    <input required type="text" placeholder="Nama Lengkap Penerima" 
-                      className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl pl-10 pr-4 py-4 focus:border-cyan-500 outline-none transition-all"
-                      value={customer.name} onChange={(e) => setCustomer({...customer, name: e.target.value})} />
+                <form id="form-checkout" onSubmit={handleNextStep} className="space-y-8">
+                  {/* Form Alamat */}
+                  <div className="space-y-5">
+                    <div className="relative">
+                      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
+                      <input required type="text" placeholder="Nama Lengkap Penerima" 
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl pl-10 pr-4 py-4 focus:border-cyan-500 outline-none transition-all"
+                        value={customer.name} onChange={(e) => setCustomer({...customer, name: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                      <FaPhoneAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
+                      <input required type="number" placeholder="Nomor WhatsApp (Aktif)" 
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl pl-10 pr-4 py-4 focus:border-cyan-500 outline-none transition-all"
+                        value={customer.phone} onChange={(e) => setCustomer({...customer, phone: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                      <FaMapMarkerAlt className="absolute left-4 top-4 text-gray-500 text-xs" />
+                      <textarea required rows="4" placeholder="Alamat Lengkap (Jalan, No. Rumah, Kota, Kode Pos)" 
+                        className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl pl-10 pr-4 py-4 focus:border-cyan-500 outline-none transition-all"
+                        value={customer.address} onChange={(e) => setCustomer({...customer, address: e.target.value})} />
+                    </div>
                   </div>
-                  <div className="relative">
-                    <FaPhoneAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
-                    <input required type="number" placeholder="Nomor WhatsApp (Aktif)" 
-                      className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl pl-10 pr-4 py-4 focus:border-cyan-500 outline-none transition-all"
-                      value={customer.phone} onChange={(e) => setCustomer({...customer, phone: e.target.value})} />
-                  </div>
-                  <div className="relative">
-                    <FaMapMarkerAlt className="absolute left-4 top-4 text-gray-500 text-xs" />
-                    <textarea required rows="4" placeholder="Alamat Lengkap (Jalan, No. Rumah, Kota, Kode Pos)" 
-                      className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl pl-10 pr-4 py-4 focus:border-cyan-500 outline-none transition-all"
-                      value={customer.address} onChange={(e) => setCustomer({...customer, address: e.target.value})} />
+
+                  {/* Pilihan Kurir Pengiriman ala E-Commerce */}
+                  <div className="pt-4 border-t border-gray-800">
+                    <h3 className="font-bold text-gray-300 mb-4 flex items-center gap-2">
+                      <FaTruck className="text-cyan-500" /> Pilih Ekspedisi
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {shippingOptions.map((option) => (
+                        <div 
+                          key={option.id}
+                          onClick={() => setSelectedShipping(option)}
+                          className={`cursor-pointer rounded-2xl p-4 border-2 transition-all flex flex-col items-start gap-2 relative overflow-hidden
+                            ${selectedShipping.id === option.id 
+                              ? 'border-cyan-500 bg-cyan-500/10' 
+                              : 'border-gray-800 bg-gray-900/50 hover:border-gray-600'
+                            }`}
+                        >
+                          {/* Centang hijau jika terpilih */}
+                          {selectedShipping.id === option.id && (
+                            <div className="absolute top-3 right-3 text-cyan-400">
+                              <FaCheckCircle />
+                            </div>
+                          )}
+                          <div className={`text-2xl ${selectedShipping.id === option.id ? 'text-cyan-400' : 'text-gray-500'}`}>
+                            {option.icon}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-white">{option.name}</p>
+                            <p className="text-xs text-gray-500 mt-1">{option.est}</p>
+                            <p className="text-sm font-black text-cyan-400 mt-2">
+                              {formatRupiah(option.cost)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </form>
               </div>
             </div>
 
+            {/* Panel Ringkasan Harga */}
             <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 h-max sticky top-28 shadow-2xl">
               <h3 className="font-bold mb-6 text-gray-400 uppercase tracking-widest text-[10px]">Ringkasan Pesanan</h3>
               <div className="space-y-4 mb-6">
@@ -177,10 +224,16 @@ const Checkout = () => {
                 ))}
               </div>
               <div className="border-t border-white/5 pt-4 space-y-3">
-                <div className="flex justify-between text-sm text-gray-400"><span>Subtotal</span><span>{formatRupiah(subtotal)}</span></div>
-                <div className="flex justify-between text-sm text-gray-400"><span>Ongkir</span><span>{formatRupiah(ongkir)}</span></div>
+                <div className="flex justify-between text-sm text-gray-400"><span>Subtotal Produk</span><span>{formatRupiah(subtotal)}</span></div>
+                <div className="flex justify-between text-sm text-gray-400">
+                  <span className="flex flex-col">
+                    Ongkos Kirim
+                    <span className="text-[9px] text-cyan-500 font-bold mt-0.5">{selectedShipping.name}</span>
+                  </span>
+                  <span>{formatRupiah(ongkir)}</span>
+                </div>
                 <div className="flex justify-between font-black text-cyan-400 pt-3 border-t border-white/5 text-lg">
-                  <span>Total</span><span>{formatRupiah(total)}</span>
+                  <span>Total Tagihan</span><span>{formatRupiah(total)}</span>
                 </div>
               </div>
               <button form="form-checkout" type="submit" className="w-full py-4 mt-8 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-cyan-500/20 active:scale-95 transition-all">
@@ -209,6 +262,9 @@ const Checkout = () => {
             <div className="bg-black/40 p-5 rounded-2xl border border-white/5 mb-8 text-center shadow-inner">
               <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-black mb-1">Total Tagihan</p>
               <h2 className="text-3xl font-black text-cyan-400">{formatRupiah(total)}</h2>
+              <p className="text-[10px] text-gray-500 mt-2 font-bold bg-gray-800/50 inline-block px-3 py-1 rounded-full">
+                Termasuk Ongkir: <span className="text-cyan-500">{selectedShipping.name}</span>
+              </p>
             </div>
 
             <button 
@@ -238,10 +294,10 @@ const Checkout = () => {
               <div className="flex justify-between items-center"><span className="text-gray-500">No. Pesanan</span><span className="font-black">{orderId}</span></div>
               <div className="flex justify-between items-center"><span className="text-gray-500">Penerima</span><span className="font-bold">{customer.name}</span></div>
               <div className="flex justify-between items-center"><span className="text-gray-500">Waktu</span><span className="font-bold">{new Date().toLocaleString('id-ID')}</span></div>
+              <div className="flex justify-between items-center"><span className="text-gray-500">Ekspedisi</span><span className="font-bold text-blue-600">{selectedShipping.name}</span></div>
               
-              {/* Status Lunas */}
               <div className="flex justify-between items-center pt-1">
-                <span className="text-gray-500">Status</span>
+                <span className="text-gray-500">Status Pembayaran</span>
                 <span className="bg-green-100 text-green-600 px-2.5 py-1 rounded-md font-black text-[9px] uppercase border border-green-200">
                   LUNAS
                 </span>
@@ -263,8 +319,8 @@ const Checkout = () => {
             </div>
 
             <div className="space-y-2 pt-4 border-t border-gray-100">
-              <div className="flex justify-between text-[11px] font-bold text-gray-400"><span>Subtotal</span><span>{formatRupiah(subtotal)}</span></div>
-              <div className="flex justify-between text-[11px] font-bold text-gray-400"><span>Ongkos Kirim</span><span>{formatRupiah(ongkir)}</span></div>
+              <div className="flex justify-between text-[11px] font-bold text-gray-400"><span>Subtotal Produk</span><span>{formatRupiah(subtotal)}</span></div>
+              <div className="flex justify-between text-[11px] font-bold text-gray-400"><span>Ongkos Kirim ({selectedShipping.id.toUpperCase()})</span><span>{formatRupiah(ongkir)}</span></div>
               <div className="flex justify-between text-base font-black text-blue-700 pt-2 border-t border-gray-200 mt-2 uppercase italic tracking-tighter">
                 <span>Total Bayar</span><span>{formatRupiah(total)}</span>
               </div>
@@ -272,7 +328,7 @@ const Checkout = () => {
 
             <div className="border-t-2 border-dashed border-gray-200 my-6 pt-6 text-center">
               <p className="text-[10px] text-gray-500 italic leading-relaxed">
-                Pembayaran berhasil diverifikasi. Pesanan Anda akan segera kami proses dan kirimkan. Terima kasih!
+                Pembayaran berhasil diverifikasi. Pesanan Anda akan segera kami serahkan ke pihak ekspedisi <span className="font-bold text-gray-700">{selectedShipping.name}</span>. Terima kasih!
               </p>
               <div className="mt-6 flex flex-col gap-3">
                 <button onClick={() => window.print()} className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl font-bold text-xs flex justify-center items-center gap-2 hover:bg-gray-100 transition-all">
