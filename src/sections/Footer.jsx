@@ -45,18 +45,12 @@ const Footer = () => {
 
     setSubscribeStatus("loading");
 
-    // ========================================================
-    // KODE EMAILJS KAMU (Tinggal Isi Service ID & Public Key)
-    // ========================================================
-    const serviceID = "service_yxlmfte";    // <--- GANTI INI
-    const templateID = "template_c2rye5o";  // <--- SUDAH SESUAI
-    const publicKey = "EtKAxQyHUJk7EuYQn";    // <--- GANTI INI
+    // Kredensial EmailJS Kamu
+    const serviceID = "service_yxlmfte";    
+    const templateID = "template_c2rye5o";  
+    const publicKey = "EtKAxQyHUJk7EuYQn";    
 
     try {
-      if(serviceID === "YOUR_SERVICE_ID" || publicKey === "YOUR_PUBLIC_KEY") {
-        throw new Error("EmailJS Credentials belum diisi");
-      }
-
       const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,7 +59,9 @@ const Footer = () => {
           template_id: templateID,
           user_id: publicKey,
           template_params: {
+            // "user_email" ini akan dikirim ke EmailJS dan masuk ke kolom "To Email"
             user_email: email, 
+            message: "Halo! Terima kasih telah berlangganan newsletter RoadFix AI. Kami akan mengirimkan info terbaru terkait teknologi Smart Mobility dan jadwal pameran RoadFix Pro langsung ke email Anda.",
             reply_to: "kelompok2iot@gmail.com"
           }
         })
@@ -79,16 +75,12 @@ const Footer = () => {
           setSubscribeStatus("idle");
         }, 3000);
       } else {
-        alert("Gagal mengirim. Cek Service ID, Public Key, atau kuota EmailJS.");
+        alert("Gagal mengirim. Pastikan 'To Email' di template EmailJS sudah diset menjadi {{user_email}}.");
         setSubscribeStatus("idle");
       }
     } catch (error) {
       console.error("Error:", error);
-      if(error.message === "EmailJS Credentials belum diisi") {
-        alert("Tombol simulasi berhasil di-klik, tapi email nyata tidak terkirim karena Service ID / Public Key belum diisi di kode.");
-      } else {
-        alert("Terjadi kesalahan jaringan.");
-      }
+      alert("Terjadi kesalahan jaringan.");
       setSubscribeStatus("idle");
     }
   };
@@ -122,7 +114,7 @@ const Footer = () => {
 
       <div className="max-w-7xl mx-auto px-6 relative z-20">
         
-        {/* ================= BUNGKUS GRID UTAMA (Diperbaiki Tag Penutupnya) ================= */}
+        {/* ================= BUNGKUS GRID UTAMA ================= */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 lg:gap-12 mb-12"
           initial="hidden"
@@ -159,7 +151,7 @@ const Footer = () => {
             </div>
           </motion.div>
 
-          {/* KOLOM 2: TAUTAN CEPAT */}
+          {/* KOLOM 2: PRODUK & INOVASI */}
           <motion.div variants={itemVariants}>
             <h3 className="text-white font-bold text-lg mb-7 relative inline-block tracking-wide">
               Produk & Inovasi
@@ -245,7 +237,7 @@ const Footer = () => {
             </form>
           </motion.div>
 
-        </motion.div> {/* <--- INI TAG YANG TADI TYPO, SUDAH BENAR SEKARANG */}
+        </motion.div>
 
         {/* ================= GARIS PEMISAH & COPYRIGHT ================= */}
         <motion.div 
