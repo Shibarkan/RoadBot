@@ -11,7 +11,8 @@ import {
   FaUser,
   FaShieldAlt,
   FaShippingFast,
-  FaBox
+  FaBox,
+  FaHistory
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -95,7 +96,8 @@ const Checkout = () => {
         orderId: newOrderId,
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
         total: total,
-        status: "Lunas",
+        // STATUS DISIMPAN SEBAGAI "DIPROSES" AGAR MASUK KE RIWAYAT SEBAGAI KUNING
+        status: "Diproses", 
         items: items,
         shipping: selectedShipping.name 
       };
@@ -296,9 +298,10 @@ const Checkout = () => {
               <div className="flex justify-between items-center"><span className="text-gray-500">Waktu</span><span className="font-bold">{new Date().toLocaleString('id-ID')}</span></div>
               <div className="flex justify-between items-center"><span className="text-gray-500">Ekspedisi</span><span className="font-bold text-blue-600">{selectedShipping.name}</span></div>
               
+              {/* LUNAS DI SINI MENJADI WARNA BIRU */}
               <div className="flex justify-between items-center pt-1">
                 <span className="text-gray-500">Status Pembayaran</span>
-                <span className="bg-green-100 text-green-600 px-2.5 py-1 rounded-md font-black text-[9px] uppercase border border-green-200">
+                <span className="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md font-black text-[9px] uppercase border border-blue-200">
                   LUNAS
                 </span>
               </div>
@@ -334,8 +337,8 @@ const Checkout = () => {
                 <button onClick={() => window.print()} className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl font-bold text-xs flex justify-center items-center gap-2 hover:bg-gray-100 transition-all">
                   <FaFileInvoiceDollar /> Simpan Struk (PDF)
                 </button>
-                <button onClick={() => navigate("/")} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/30 transition-colors">
-                  Kembali ke Beranda
+                <button onClick={() => navigate("/cart")} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/30 transition-colors flex justify-center items-center gap-2">
+                  <FaHistory className="text-sm" /> Cek Riwayat Pesanan
                 </button>
               </div>
             </div>
