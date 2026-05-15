@@ -28,8 +28,8 @@ uniform bool uTransparent;
 
 varying vec2 vUv;
 
-// --- DITINGKATKAN JADI 8 LAYER BIAR MAKIN PADAT ---
-#define NUM_LAYER 8.0
+// --- DITINGKATKAN AGRESSIF JADI 16 LAYER BIAR SUPER TEBAL ---
+#define NUM_LAYER 16.0
 
 float Hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -73,7 +73,10 @@ vec3 StarLayer(vec2 uv, float seedOffset) {
       float hue = fract(uHueShift / 360.0 + seed * 0.4); 
       vec3 base = hsv2rgb(vec3(hue, uSaturation, 1.0));
       float twinkle = sin(uTime * 3.0 + seed * 10.0) * 0.5 + 0.5;
-      float star = (0.06 * uGlowIntensity) / length(gv - offset);
+      
+      // Ukuran inti bintang dikecilkan dikit (0.04) biar kalau rame ga numpuk parah
+      float star = (0.04 * uGlowIntensity) / length(gv - offset);
+      
       star *= smoothstep(0.6, 0.05, length(gv-offset));
       col += star * base * twinkle * fract(seed * 456.7);
     }
@@ -106,11 +109,14 @@ void main() {
 
   vec3 finalCol = vec3(0.0);
 
-  // Render Bintang dengan Scale yang Lebih Padat
+  // Render Bintang dengan Scale yang SUPER PADAT (Lautan Bintang)
   for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
     float depth = fract(i + uStarSpeed);
-    // Skala ditingkatkan dari (14.0, 1.2) menjadi (25.0, 3.0) biar grid bintang lebih rapat
-    float scale = mix(25.0 * uDensity, 3.0 * uDensity, depth);
+    
+    // --- SKALA DIRAPATKAN EXTREME JADI 50.0 ---
+    // Ini memaksa ribuan partikel muncul dalam satu grid
+    float scale = mix(50.0 * uDensity, 4.0 * uDensity, depth);
+    
     float fade = depth * smoothstep(1.0, 0.7, depth);
     finalCol += StarLayer(uv * scale + i * 123.4, i) * fade;
   }
@@ -142,7 +148,7 @@ void main() {
 export default function Galaxy({
   focal = [0.5, 0.5],
   starSpeed = 0.4,
-  density = 1.2, // Default density dinaikkan sedikit dari 0.9 biar makin berasa padat
+  density = 1.8, // Default density dinaikkan drastis jadi 1.8 biar padat pol
   hueShift = 210,
   speed = 1.0,
   glowIntensity = 1.2,
@@ -158,6 +164,7 @@ export default function Galaxy({
   useEffect(() => {
     if (!ctnDom.current) return;
     const ctn = ctnDom.current;
+    // Gunakan powerPreference high-performance karena shader ini sekarang cukup berat GPU-nya
     const renderer = new Renderer({ alpha: transparent, premultipliedAlpha: false, powerPreference: "high-performance" });
     const gl = renderer.gl;
 
