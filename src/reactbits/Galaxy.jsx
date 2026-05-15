@@ -1,4 +1,4 @@
-import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
+Import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
 
 const vertexShader = `
@@ -28,8 +28,7 @@ uniform bool uTransparent;
 
 varying vec2 vUv;
 
-// --- DITINGKATKAN AGRESSIF JADI 16 LAYER BIAR SUPER TEBAL ---
-#define NUM_LAYER 16.0
+#define NUM_LAYER 4.0
 
 float Hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -73,10 +72,7 @@ vec3 StarLayer(vec2 uv, float seedOffset) {
       float hue = fract(uHueShift / 360.0 + seed * 0.4); 
       vec3 base = hsv2rgb(vec3(hue, uSaturation, 1.0));
       float twinkle = sin(uTime * 3.0 + seed * 10.0) * 0.5 + 0.5;
-      
-      // Ukuran inti bintang dikecilkan dikit (0.04) biar kalau rame ga numpuk parah
-      float star = (0.04 * uGlowIntensity) / length(gv - offset);
-      
+      float star = (0.06 * uGlowIntensity) / length(gv - offset);
       star *= smoothstep(0.6, 0.05, length(gv-offset));
       col += star * base * twinkle * fract(seed * 456.7);
     }
@@ -109,14 +105,10 @@ void main() {
 
   vec3 finalCol = vec3(0.0);
 
-  // Render Bintang dengan Scale yang SUPER PADAT (Lautan Bintang)
+  // Render Bintang
   for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
     float depth = fract(i + uStarSpeed);
-    
-    // --- SKALA DIRAPATKAN EXTREME JADI 50.0 ---
-    // Ini memaksa ribuan partikel muncul dalam satu grid
-    float scale = mix(50.0 * uDensity, 4.0 * uDensity, depth);
-    
+    float scale = mix(14.0 * uDensity, 1.2 * uDensity, depth);
     float fade = depth * smoothstep(1.0, 0.7, depth);
     finalCol += StarLayer(uv * scale + i * 123.4, i) * fade;
   }
@@ -148,7 +140,7 @@ void main() {
 export default function Galaxy({
   focal = [0.5, 0.5],
   starSpeed = 0.4,
-  density = 1.8, // Default density dinaikkan drastis jadi 1.8 biar padat pol
+  density = 0.9,
   hueShift = 210,
   speed = 1.0,
   glowIntensity = 1.2,
@@ -164,7 +156,6 @@ export default function Galaxy({
   useEffect(() => {
     if (!ctnDom.current) return;
     const ctn = ctnDom.current;
-    // Gunakan powerPreference high-performance karena shader ini sekarang cukup berat GPU-nya
     const renderer = new Renderer({ alpha: transparent, premultipliedAlpha: false, powerPreference: "high-performance" });
     const gl = renderer.gl;
 
