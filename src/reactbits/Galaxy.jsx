@@ -28,7 +28,8 @@ uniform bool uTransparent;
 
 varying vec2 vUv;
 
-#define NUM_LAYER 4.0
+// --- DITINGKATKAN JADI 8 LAYER BIAR MAKIN PADAT ---
+#define NUM_LAYER 8.0
 
 float Hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -105,10 +106,11 @@ void main() {
 
   vec3 finalCol = vec3(0.0);
 
-  // Render Bintang
+  // Render Bintang dengan Scale yang Lebih Padat
   for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
     float depth = fract(i + uStarSpeed);
-    float scale = mix(14.0 * uDensity, 1.2 * uDensity, depth);
+    // Skala ditingkatkan dari (14.0, 1.2) menjadi (25.0, 3.0) biar grid bintang lebih rapat
+    float scale = mix(25.0 * uDensity, 3.0 * uDensity, depth);
     float fade = depth * smoothstep(1.0, 0.7, depth);
     finalCol += StarLayer(uv * scale + i * 123.4, i) * fade;
   }
@@ -140,7 +142,7 @@ void main() {
 export default function Galaxy({
   focal = [0.5, 0.5],
   starSpeed = 0.4,
-  density = 0.9,
+  density = 1.2, // Default density dinaikkan sedikit dari 0.9 biar makin berasa padat
   hueShift = 210,
   speed = 1.0,
   glowIntensity = 1.2,
