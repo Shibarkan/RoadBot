@@ -62,8 +62,7 @@ const Hero = () => {
   return (
     <section
       id="home"
-      // Font utama diset ke Outfit untuk seluruh section
-      className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-black/50 via-black/30 to-transparent backdrop-blur-[2px] px-6 pt-24 md:pt-32 pb-16 font-['Outfit',_sans-serif]"
+      className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-24 md:pt-32 pb-16 font-['Outfit',_sans-serif]"
     >
       {/* ================= INJECT GOOGLE FONTS ================= */}
       <style>
