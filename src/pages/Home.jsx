@@ -76,16 +76,16 @@ const Home = () => {
           <Galaxy
             mouseRepulsion={true}
             mouseInteraction={false}
-            density={0.6} // Bintang agak jarang agar tidak penuh sesak
-            glowIntensity={0.35} // Cincin luarnya menyala pas, tidak merusak mata
+            density={1} // Bintang agak jarang agar tidak penuh sesak
+            glowIntensity={0.5} // Cincin luarnya menyala pas, tidak merusak mata
             saturation={0.9} // Warna biru/cyan sangat keluar dan tajam
             hueShift={215} // Geser warna dasar mutlak ke tema Biru Neo
             twinkleIntensity={0.2} // Kedipan halus, membuat landing page tenang
-            rotationSpeed={0.03} // Berputar sangat pelan dan megah
+            rotationSpeed={0.1} // Berputar sangat pelan dan megah
             repulsionStrength={1.2}
-            autoCenterRepulsion={3.0} // Lubang hitam terdorong ke tengah dengan presisi
-            starSpeed={0.4} // Efek kedalaman zoom-out yang pas
-            speed={0.7} // Animasi super smooth
+            autoCenterRepulsion={2.0} // Lubang hitam terdorong ke tengah dengan presisi
+            starSpeed={0.7} // Efek kedalaman zoom-out yang pas
+            speed={0.8} // Animasi super smooth
           />
         )}
 
