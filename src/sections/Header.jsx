@@ -40,18 +40,30 @@ const Header = () => {
     };
   }, []);
 
-  const handleNavClick = (e, item) => {
-    if (item.name === "Cara Kerja") {
-      e.preventDefault();
-      if (location.pathname === "/") {
-        const el = document.getElementById("cara-kerja");
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      } else {
-        navigate("/#cara-kerja");
+const handleNavClick = (e, item) => {
+
+  // Tutup navbar mobile setiap menu ditekan
+  setIsOpen(false);
+
+  if (item.name === "Cara Kerja") {
+    e.preventDefault();
+
+    if (location.pathname === "/") {
+
+      const el = document.getElementById("cara-kerja");
+
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth"
+        });
       }
-      setIsOpen(false);
+
+    } else {
+
+      navigate("/#cara-kerja");
     }
-  };
+  }
+};
 
   const menuItems = [
     { name: "Beranda ", path: "/" },
