@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import Galaxy from "../reactbits/Galaxy";
+// import Galaxy from "../reactbits/Galaxy"; // <-- Galaxy dimatikan (comment) dulu
+import Prism from "../reactbits/Prism"; // <-- Import Prism ditambahkan
 import Hero from "../sections/Hero";
 import Features from "../sections/Features";
 
@@ -49,8 +50,11 @@ const Home = () => {
 
   return (
     <main className="pt-24 relative z-10 flex flex-col items-center min-h-screen">
-      {/* 🌌 BACKGROUND GALAXY */}
-      <div className="fixed inset-0 -z-10 bg-black">
+      
+      {/* 🌌 BACKGROUND AREA */}
+      <div className="fixed inset-0 -z-10 bg-black overflow-hidden">
+        
+        {/* === GALAXY DI-COMMENT ===
         <Galaxy
           mouseRepulsion
           mouseInteraction={false}
@@ -65,6 +69,23 @@ const Home = () => {
           starSpeed={0.5}
           speed={1}
         />
+        */}
+
+        {/* 🔺 BACKGROUND PRISM BARU */}
+        <div className="absolute inset-0 w-full h-full">
+          <Prism
+            animationType="rotate"
+            timeScale={0.5}
+            height={3.5}
+            baseWidth={5.5}
+            scale={3.6}
+            hueShift={0}
+            colorFrequency={1}
+            noise={0}
+            glow={1}
+          />
+        </div>
+
       </div>
 
       {isLoading ? (
