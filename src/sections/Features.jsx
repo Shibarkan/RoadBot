@@ -17,7 +17,6 @@ import Product from "./Product";
 // ================= KOMPONEN ANGKA BERJALAN =================
 const AnimatedCounter = ({ from = 0, to, prefix = "", suffix = "", decimals = 0, duration = 2.5 }) => {
   const ref = useRef(null);
-  // Animasi hanya jalan saat elemen masuk ke dalam layar
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   useEffect(() => {
@@ -107,10 +106,11 @@ const Features = () => {
   ];
 
   return (
-    // DI SINI RAHASIA ANTI-BOCORNYA: w-full dan overflow-hidden
-    <section id="cara-kerja" className="py-16 md:py-24 relative z-10 bg-[#030712] w-full overflow-hidden">
+    // DI SINI PERUBAHANNYA: bg-[#030712] dihapus dan diganti bg-transparent
+    <section id="cara-kerja" className="py-16 md:py-24 relative z-10 bg-transparent w-full overflow-hidden">
       
-      {/* ================= BACKGROUND GLOW ANTI BOCOR ================= */}
+      {/* ================= BACKGROUND GLOW ================= */}
+      {/* Glow tetap dipertahankan karena sifatnya transparan dan menambah estetika di atas galaksi */}
       <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-0 -left-20 w-64 h-64 md:w-96 md:h-96 bg-blue-600/10 rounded-full blur-[100px] animate-pulse"></div>
         <div className="absolute top-1/2 -right-20 w-64 h-64 md:w-96 md:h-96 bg-cyan-600/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "2s" }}></div>
@@ -137,7 +137,6 @@ const Features = () => {
         </motion.div>
 
         <div className="relative mb-24 md:mb-40">
-          {/* Garis Komet (Hanya Desktop) */}
           <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gray-800/50 -z-10 -translate-y-1/2 overflow-hidden rounded-full">
             <motion.div
               animate={{ x: ["-100%", "400%"] }}
@@ -155,12 +154,12 @@ const Features = () => {
                 viewport={{ once: true, amount: 0.2 }}
                 className="relative group"
               >
-                {/* Nomor Urut Belakang */}
                 <span className="absolute -top-8 md:-top-10 -left-2 md:-left-4 text-6xl md:text-8xl font-black text-white/[0.03] pointer-events-none group-hover:text-cyan-500/10 transition-colors duration-500">
                   {feature.step}
                 </span>
 
-                <div className="relative z-10 bg-[#111827]/80 backdrop-blur-xl border border-gray-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] hover:border-cyan-500/50 transition-all duration-400 shadow-2xl h-full flex flex-col items-center text-center group-hover:-translate-y-2 md:group-hover:-translate-y-4">
+                {/* Glassmorphism di sini bikin teks tetap terbaca walau background galaksi terang */}
+                <div className="relative z-10 bg-[#111827]/70 backdrop-blur-xl border border-gray-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] hover:border-cyan-500/50 transition-all duration-400 shadow-2xl h-full flex flex-col items-center text-center group-hover:-translate-y-2 md:group-hover:-translate-y-4">
                   
                   <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
                     <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_#06b6d4]" />
@@ -184,7 +183,7 @@ const Features = () => {
           </div>
         </div>
 
-        {/* ================= SECTION 2: TEKNOLOGI INTI (BENTO GRID) ================= */}
+        {/* ================= SECTION 2: TEKNOLOGI INTI ================= */}
         <div className="mb-24 md:mb-40">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -204,18 +203,14 @@ const Features = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "0px 0px -20px 0px" }} 
                 transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-                // col-span-1 memastikan selalu 1 baris penuh di HP
-                className={`relative overflow-hidden bg-gradient-to-br from-[#111827]/80 to-black/40 backdrop-blur-xl border border-white/5 p-6 md:p-8 rounded-[1.5rem] md:rounded-3xl hover:border-cyan-400/40 hover:shadow-[0_15px_40px_-10px_rgba(6,182,212,0.2)] hover:-translate-y-2 transition-all duration-500 ease-out group col-span-1 ${tech.colSpan}`}
+                className={`relative overflow-hidden bg-gradient-to-br from-[#111827]/60 to-black/30 backdrop-blur-xl border border-white/5 p-6 md:p-8 rounded-[1.5rem] md:rounded-3xl hover:border-cyan-400/40 hover:shadow-[0_15px_40px_-10px_rgba(6,182,212,0.2)] hover:-translate-y-2 transition-all duration-500 ease-out group col-span-1 ${tech.colSpan}`}
               >
-                {/* EFEK CAHAYA TERSEMBUNYI DI POJOK KANAN ATAS */}
                 <div className="absolute -top-16 -right-16 w-32 h-32 md:w-40 md:h-40 bg-cyan-500/0 rounded-full blur-[40px] group-hover:bg-cyan-500/20 transition-all duration-700 ease-in-out pointer-events-none"></div>
 
-                {/* ICON DENGAN EFEK POP-UP */}
                 <div className="relative z-10 w-12 h-12 md:w-14 md:h-14 bg-gray-800/80 rounded-2xl flex items-center justify-center text-cyan-400 text-xl md:text-2xl mb-4 md:mb-6 group-hover:scale-110 group-hover:bg-cyan-500/10 group-hover:text-cyan-300 transition-all duration-500 border border-white/5 group-hover:border-cyan-500/50 shadow-inner">
                   {tech.icon}
                 </div>
 
-                {/* TEKS YANG IKUT MENYALA SAAT DI-HOVER */}
                 <div className="relative z-10">
                   <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3 group-hover:text-cyan-300 transition-colors duration-300">
                     {tech.title}
@@ -225,16 +220,14 @@ const Features = () => {
                   </p>
                 </div>
                 
-                {/* GARIS BORDER BAWAH SEBAGAI AKSEN */}
                 <div className="absolute bottom-0 left-0 w-full h-1 md:h-0.5 bg-gradient-to-r from-transparent via-cyan-500 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out origin-left"></div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* ================= SECTION 3: STATISTIK & IMPACT (DENGAN ANIMASI ANGKA) ================= */}
-        <div className="mb-24 md:mb-32 max-w-6xl mx-auto bg-gradient-to-r from-blue-900/20 to-cyan-900/20 border border-cyan-500/20 rounded-[2rem] md:rounded-[3rem] p-6 md:p-16 relative overflow-hidden">
-          {/* Efek Garis Cyber di dalam kotak */}
+        {/* ================= SECTION 3: STATISTIK ================= */}
+        <div className="mb-24 md:mb-32 max-w-6xl mx-auto bg-gradient-to-r from-blue-900/30 to-cyan-900/30 backdrop-blur-md border border-cyan-500/20 rounded-[2rem] md:rounded-[3rem] p-6 md:p-16 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50"></div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 text-center relative z-10">
@@ -266,8 +259,9 @@ const Features = () => {
 
       </div>
       
-      {/* ================= PRODUCT CAROUSEL DI PALING BAWAH ================= */}
-      <div className="mt-10 border-t border-white/5 pt-16 md:pt-20 bg-[#02040a]">
+      {/* ================= PRODUCT CAROUSEL ================= */}
+      {/* bg-[#02040a] dihapus dan diganti bg-transparent */}
+      <div className="mt-10 border-t border-white/5 pt-16 md:pt-20 bg-transparent">
         <div className="text-center mb-8 md:mb-12 px-4">
           <h2 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-4 tracking-tight">Mulai Transformasi Infrastruktur Anda</h2>
           <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto">Pilih unit robot RoadFix AI yang sesuai dengan kebutuhan skala kota Anda.</p>
