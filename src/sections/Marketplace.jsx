@@ -390,14 +390,14 @@ const Marketplace = () => {
             </select>
 
             {/* UPLOAD */}
-            <button
+            {/* <button
               onClick={() =>
                 navigate("/upload")
               }
               className="px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center"
             >
               <FaPlus />
-            </button>
+            </button> */}
           </div>
         </div>
 
