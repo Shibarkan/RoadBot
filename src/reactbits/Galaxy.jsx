@@ -14,7 +14,7 @@ void main() {
 `;
 
 const fragmentShader = `
-precision mediump float;
+precision highp float;
 
 uniform float uTime;
 uniform vec3 uResolution;
@@ -37,7 +37,8 @@ uniform bool uTransparent;
 
 varying vec2 vUv;
 
-#define NUM_LAYER 3.0 
+#define NUM_LAYER 4.0
+#define STAR_COLOR_CUTOFF 0.2
 #define MAT45 mat2(0.7071, -0.7071, 0.7071, 0.7071)
 #define PERIOD 3.0
 
@@ -47,9 +48,19 @@ float Hash21(vec2 p) {
   return fract(p.x * p.y);
 }
 
-float tri(float x) { return abs(fract(x) * 2.0 - 1.0); }
-float tris(float x) { float t = fract(x); return 1.0 - smoothstep(0.0, 1.0, abs(2.0 * t - 1.0)); }
-float trisn(float x) { float t = fract(x); return 2.0 * (1.0 - smoothstep(0.0, 1.0, abs(2.0 * t - 1.0))) - 1.0; }
+float tri(float x) {
+  return abs(fract(x) * 2.0 - 1.0);
+}
+
+float tris(float x) {
+  float t = fract(x);
+  return 1.0 - smoothstep(0.0, 1.0, abs(2.0 * t - 1.0));
+}
+
+float trisn(float x) {
+  float t = fract(x);
+  return 2.0 * (1.0 - smoothstep(0.0, 1.0, abs(2.0 * t - 1.0))) - 1.0;
+}
 
 vec3 hsv2rgb(vec3 c) {
   vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -69,8 +80,9 @@ float Star(vec2 uv, float flare) {
   return m;
 }
 
-vec3 StarLayer(vec2 uv, float depth) {
+vec3 StarLayer(vec2 uv) {
   vec3 col = vec3(0.0);
+
   vec2 gv = fract(uv) - 0.5; 
   vec2 id = floor(uv);
 
@@ -78,17 +90,26 @@ vec3 StarLayer(vec2 uv, float depth) {
     for (int x = -1; x <= 1; x++) {
       vec2 offset = vec2(float(x), float(y));
       vec2 si = id + vec2(float(x), float(y));
-      
       float seed = Hash21(si);
       float size = fract(seed * 345.32);
       float glossLocal = tri(uStarSpeed / (PERIOD * seed + 1.0));
       float flareSize = smoothstep(0.9, 1.0, size) * glossLocal;
 
-      float hue = fract(seed * 777.7 + uHueShift / 360.0);
-      vec3 color = hsv2rgb(vec3(hue, uSaturation, 1.0));
+      float red = smoothstep(STAR_COLOR_CUTOFF, 1.0, Hash21(si + 1.0)) + STAR_COLOR_CUTOFF;
+      float blu = smoothstep(STAR_COLOR_CUTOFF, 1.0, Hash21(si + 3.0)) + STAR_COLOR_CUTOFF;
+      float grn = min(red, blu) * seed;
+      vec3 base = vec3(red, grn, blu);
+      
+      float hue = atan(base.g - base.r, base.b - base.r) / (2.0 * 3.14159) + 0.5;
+      hue = fract(hue + uHueShift / 360.0);
+      float sat = length(base - vec3(dot(base, vec3(0.299, 0.587, 0.114)))) * uSaturation;
+      float val = max(max(base.r, base.g), base.b);
+      base = hsv2rgb(vec3(hue, sat, val));
 
       vec2 pad = vec2(tris(seed * 34.0 + uTime * uSpeed / 10.0), tris(seed * 38.0 + uTime * uSpeed / 30.0)) - 0.5;
+
       float star = Star(gv - offset - pad, flareSize);
+      vec3 color = base;
 
       float twinkle = trisn(uTime * uSpeed + seed * 6.2831) * 0.5 + 1.0;
       twinkle = mix(1.0, twinkle, uTwinkleIntensity);
@@ -97,88 +118,51 @@ vec3 StarLayer(vec2 uv, float depth) {
       col += star * size * color;
     }
   }
+
   return col;
 }
 
 void main() {
   vec2 focalPx = uFocal * uResolution.xy;
-  vec2 baseUv = (vUv * uResolution.xy - focalPx) / uResolution.y;
+  vec2 uv = (vUv * uResolution.xy - focalPx) / uResolution.y;
 
-  // ========================================================
-  // SETTING BLACK HOLE (GARGANTUA STYLE)
-  // ========================================================
-  float d = length(baseUv);
-  float bhRadius = 0.25; // Diperbesar biar makin kelihatan!
-
-  // 1. EFEK LENSING (MELENGKUNGKAN CAHAYA DI SEKITAR BLACKHOLE)
-  vec2 warpedUv = baseUv;
-  float warpAmount = 0.0;
-  if (d > bhRadius) {
-    // Tarikan gravitasi (melengkungkan bintang)
-    warpAmount = pow(bhRadius / d, 3.5); 
-    warpedUv = baseUv - normalize(baseUv) * warpAmount * 0.4;
+  vec2 mouseNorm = uMouse - vec2(0.5);
+  
+  if (uAutoCenterRepulsion > 0.0) {
+    vec2 centerUV = vec2(0.0, 0.0);
+    float centerDist = length(uv - centerUV);
+    vec2 repulsion = normalize(uv - centerUV) * (uAutoCenterRepulsion / (centerDist + 0.1));
+    uv += repulsion * 0.05;
+  } else if (uMouseRepulsion) {
+    vec2 mousePosUV = (uMouse * uResolution.xy - focalPx) / uResolution.y;
+    float mouseDist = length(uv - mousePosUV);
+    vec2 repulsion = normalize(uv - mousePosUV) * (uRepulsionStrength / (mouseDist + 0.1));
+    uv += repulsion * 0.05 * uMouseActiveFactor;
+  } else {
+    vec2 mouseOffset = mouseNorm * 0.1 * uMouseActiveFactor;
+    uv += mouseOffset;
   }
 
-  // Rotasi Galaksi
   float autoRotAngle = uTime * uRotationSpeed;
   mat2 autoRot = mat2(cos(autoRotAngle), -sin(autoRotAngle), sin(autoRotAngle), cos(autoRotAngle));
-  warpedUv = autoRot * warpedUv;
-  warpedUv = mat2(uRotation.x, -uRotation.y, uRotation.y, uRotation.x) * warpedUv;
+  uv = autoRot * uv;
+
+  uv = mat2(uRotation.x, -uRotation.y, uRotation.y, uRotation.x) * uv;
 
   vec3 col = vec3(0.0);
 
-  // 2. RENDER BINTANG (HANYA DI LUAR LUBANG HITAM)
-  if (d > bhRadius * 0.95) {
-    for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
-      float depth = fract(i + uStarSpeed * uSpeed);
-      float scale = mix(25.0 * uDensity, 0.5 * uDensity, depth); 
-      float fade = depth * smoothstep(1.0, 0.9, depth);
-      
-      // Bintang meredup saat tersedot
-      float redshiftFade = 1.0 - warpAmount * 0.9; 
-      
-      col += StarLayer(warpedUv * scale + i * 453.32, depth) * fade * redshiftFade;
-    }
+  for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYER) {
+    float depth = fract(i + uStarSpeed * uSpeed);
+    float scale = mix(20.0 * uDensity, 0.5 * uDensity, depth);
+    float fade = depth * smoothstep(1.0, 0.9, depth);
+    col += StarLayer(uv * scale + i * 453.32) * fade;
   }
 
-  // ========================================================
-  // 3. RENDER CINCIN ACCRETION DISK (PLASMA MENYALA)
-  // ========================================================
-  float diskThickness = 0.15;
-  // Area cincin plasma
-  float disk = smoothstep(bhRadius + diskThickness, bhRadius, d) * smoothstep(bhRadius - 0.02, bhRadius + 0.02, d);
-  
-  // Efek pusaran plasma
-  float angle = atan(baseUv.y, baseUv.x);
-  float plasma = sin(angle * 12.0 - uTime * 6.0) * 0.5 + 0.5;
-  plasma = pow(plasma, 2.0); // Mempertajam gelombang plasma
-  
-  vec3 diskColor = vec3(1.0, 0.4, 0.1); // Oranye keemasan layaknya api kosmik
-  col += disk * diskColor * (plasma + 0.5) * 1.8 * uGlowIntensity;
-  
-  // Glow luar disekitar cincin
-  float outerGlow = smoothstep(bhRadius + 0.4, bhRadius, d);
-  col += outerGlow * vec3(0.6, 0.2, 0.0) * 0.6 * uGlowIntensity;
-
-  // ========================================================
-  // 4. POTONG BAGIAN TENGAH AGAR SOLID BLACK (EVENT HORIZON)
-  // ========================================================
-  float eventHorizon = smoothstep(bhRadius - 0.005, bhRadius + 0.005, d);
-  col *= eventHorizon; // Potong cahaya di dalam
-
   if (uTransparent) {
-    // INI PERBAIKAN FATALNYA:
-    // Pastikan area lubang hitam memiliki Alpha = 1.0 (Solid/Tidak Tembus Pandang)
-    float baseAlpha = length(col);
-    baseAlpha = smoothstep(0.0, 0.3, baseAlpha);
-    
-    // Apakah koordinat ini berada di dalam Black Hole?
-    float isInsideBlackHole = 1.0 - smoothstep(bhRadius - 0.01, bhRadius + 0.01, d);
-    
-    // Gabungkan: transparan di luar, TAPI hitam pekat solid di dalam
-    float finalAlpha = max(baseAlpha, isInsideBlackHole);
-    
-    gl_FragColor = vec4(col, min(finalAlpha, 1.0));
+    float alpha = length(col);
+    alpha = smoothstep(0.0, 0.3, alpha);
+    alpha = min(alpha, 1.0);
+    gl_FragColor = vec4(col, alpha);
   } else {
     gl_FragColor = vec4(col, 1.0);
   }
@@ -189,20 +173,19 @@ export default function Galaxy({
   focal = [0.5, 0.5],
   rotation = [1.0, 0.0],
   starSpeed = 0.5,
-  density = 1.5,
+  density = 1,
   hueShift = 140,
   disableAnimation = false,
   speed = 1.0,
   mouseInteraction = true,
-  glowIntensity = 1.2, 
+  glowIntensity = 0.3,
   saturation = 0.0,
   mouseRepulsion = true,
   repulsionStrength = 2,
-  twinkleIntensity = 0.5,
-  rotationSpeed = -0.15, // Dibuat berputar kebalik biar lebih epik
+  twinkleIntensity = 0.3,
+  rotationSpeed = 0.1,
   autoCenterRepulsion = 0,
   transparent = true,
-  resolutionScale = 0.6, // Kompromi antara ketajaman dan performa GPU
   ...rest
 }) {
   const ctnDom = useRef(null);
@@ -214,12 +197,10 @@ export default function Galaxy({
   useEffect(() => {
     if (!ctnDom.current) return;
     const ctn = ctnDom.current;
-    
     const renderer = new Renderer({
       alpha: transparent,
-      premultipliedAlpha: false,
+      premultipliedAlpha: false
     });
-    
     const gl = renderer.gl;
 
     if (transparent) {
@@ -233,9 +214,8 @@ export default function Galaxy({
     let program;
 
     function resize() {
-      renderer.setSize(ctn.offsetWidth * resolutionScale, ctn.offsetHeight * resolutionScale);
-      gl.canvas.style.width = '100%';
-      gl.canvas.style.height = '100%';
+      const scale = 1;
+      renderer.setSize(ctn.offsetWidth * scale, ctn.offsetHeight * scale);
       if (program) {
         program.uniforms.uResolution.value = new Color(
           gl.canvas.width,
@@ -245,6 +225,7 @@ export default function Galaxy({
       }
     }
     window.addEventListener('resize', resize, false);
+    resize();
 
     const geometry = new Triangle(gl);
     program = new Program(gl, {
@@ -253,7 +234,7 @@ export default function Galaxy({
       uniforms: {
         uTime: { value: 0 },
         uResolution: {
-          value: new Color(1, 1, 1)
+          value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height)
         },
         uFocal: { value: new Float32Array(focal) },
         uRotation: { value: new Float32Array(rotation) },
@@ -276,8 +257,6 @@ export default function Galaxy({
       }
     });
 
-    resize(); 
-
     const mesh = new Mesh(gl, { geometry, program });
     let animateId;
 
@@ -294,8 +273,8 @@ export default function Galaxy({
 
       smoothMouseActive.current += (targetMouseActive.current - smoothMouseActive.current) * lerpFactor;
 
-      program.uniforms.uMouse.value = smoothMousePos.current.x;
-      program.uniforms.uMouse.value = smoothMousePos.current.y;
+      program.uniforms.uMouse.value[0] = smoothMousePos.current.x;
+      program.uniforms.uMouse.value[1] = smoothMousePos.current.y;
       program.uniforms.uMouseActiveFactor.value = smoothMouseActive.current;
 
       renderer.render({ scene: mesh });
@@ -346,9 +325,8 @@ export default function Galaxy({
     rotationSpeed,
     repulsionStrength,
     autoCenterRepulsion,
-    transparent,
-    resolutionScale
+    transparent
   ]);
 
-  return <div ref={ctnDom} className="w-full h-full absolute inset-0 -z-10" {...rest} />;
-}   
+  return <div ref={ctnDom} className="w-full h-full relative" {...rest} />;
+}
