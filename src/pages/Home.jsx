@@ -75,21 +75,20 @@ const Home = () => {
         
         {/* LOGIKA 1: JIKA MOBILE, NYALAKAN GALAXY (PRISM MATI TOTAL) */}
         {isMobile && (
-          <Galaxy
-            mouseRepulsion
-            mouseInteraction={false}
-            density={1.5}
-            glowIntensity={1.5}
-            saturation={0.0}
-            hueShift={140}
-            twinkleIntensity={0.5}
-            rotationSpeed={-0.15}
-            repulsionStrength={2}
-            autoCenterRepulsion={4}
-            starSpeed={0.5}
-            speed={1}
-            resolutionScale={0.6}
-          />
+        <Galaxy
+          mouseRepulsion
+          mouseInteraction={false}
+          density={1}
+          glowIntensity={0.3}
+          saturation={0.8}
+          hueShift={160}
+          twinkleIntensity={0.5}
+          rotationSpeed={0.1}
+          repulsionStrength={2}
+          autoCenterRepulsion={4}
+          starSpeed={0.5}
+          speed={1}
+        />
         )}
 
         {/* LOGIKA 2: JIKA BUKAN MOBILE (DESKTOP), NYALAKAN PRISM (GALAXY MATI TOTAL) */}
