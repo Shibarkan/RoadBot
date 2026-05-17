@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { FaRobot, FaPlus, FaShoppingCart } from "react-icons/fa"; // Tambahkan FaShoppingCart
+import { FaRobot, FaShoppingCart } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronRight } from 'lucide-react';
+// import {FaPlus} from "react-icons/fa";  <-- menambah tombol tambah poroduk
 
 
 const Header = () => {
@@ -123,12 +124,12 @@ const handleNavClick = (e, item) => {
             )}
           </Link>
 
-          <Link
+          {/* <Link
             to="/upload"
             className="hidden md:flex px-5 py-2.5 bg-white/5 border border-white/10 hover:border-cyan-400 rounded-full text-sm font-bold text-white transition-all items-center gap-2"
           >
             <FaPlus className="text-cyan-400" /> Jual Produk
-          </Link>
+          </Link> */}
 
           {/* BUTTON BELANJA */}
           <div className="hidden md:block relative group">
@@ -172,9 +173,9 @@ const handleNavClick = (e, item) => {
             <Link to="/marketplace" onClick={() => setIsOpen(false)} className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-bold flex justify-center items-center gap-2">
                 Belanja Sekarang
             </Link>
-            <Link to="/upload" onClick={() => setIsOpen(false)} className="w-full py-3 bg-white/5 border border-white/20 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2">
+            {/* <Link to="/upload" onClick={() => setIsOpen(false)} className="w-full py-3 bg-white/5 border border-white/20 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2">
               <FaPlus className="text-cyan-400" /> Jual Produk
-            </Link>
+            </Link> */} 
           </div>
         </div>
       </div>
