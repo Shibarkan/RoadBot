@@ -76,16 +76,16 @@ const Home = () => {
           <Galaxy
             mouseRepulsion
             mouseInteraction={false}
-            density={0.65}
-            glowIntensity={0.22}
-            saturation={0.7}
-            hueShift={160}
-            twinkleIntensity={0.12}
-            rotationSpeed={0.03}
-            repulsionStrength={1.2}
-            autoCenterRepulsion={2.5}
-            starSpeed={1}
-            speed={0.7}
+            density={0.78}
+            glowIntensity={0.26}
+            saturation={0.85}
+            hueShift={155}
+            twinkleIntensity={0.18}
+            rotationSpeed={0.045}
+            repulsionStrength={1.4}
+            autoCenterRepulsion={2.8}
+            starSpeed={0.32}
+            speed={0.8}
           />
         )}
 
