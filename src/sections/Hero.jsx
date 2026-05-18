@@ -269,10 +269,10 @@ const Hero = () => {
               transition={{ duration: 3, repeat: Infinity }}
               className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-8 bg-black/70 backdrop-blur-xl border border-white/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-3 sm:gap-4 shadow-2xl"
             >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 relative">
+              {/* <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 relative">
                 <span className="absolute w-2 h-2 sm:w-3 sm:h-3 bg-emerald-400 rounded-full animate-ping"></span>
                 <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full"></span>
-              </div>
+              </div> */}
               <div>
                 <p className="text-white text-xs sm:text-sm font-bold font-['Space_Grotesk',_sans-serif]">
                   AI Vision Aktif

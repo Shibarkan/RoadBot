@@ -85,7 +85,7 @@ const Home = () => {
             repulsionStrength={1.2}
             autoCenterRepulsion={2.0} // Lubang hitam terdorong ke tengah dengan presisi
             starSpeed={0.7} // Efek kedalaman zoom-out yang pas
-            speed={0.8} // Animasi super smooth
+            speed={1} // Animasi super smooth
           />
         )}
 
