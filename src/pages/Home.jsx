@@ -105,6 +105,7 @@ const Home = () => {
               resolutionScale={0.75}
             />
           </div>
+          
         )}
       </div>
 

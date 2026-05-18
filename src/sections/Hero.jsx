@@ -166,7 +166,7 @@ const Hero = () => {
                 rel="noopener noreferrer"
                 className="relative px-8 py-4 rounded-full bg-black border border-cyan-500/40 text-white font-semibold flex items-center justify-center gap-3 hover:scale-[1.03] transition-all duration-300"
               >
-                <span>Lihat Demo</span>
+                <span>Lihat Demonya </span>
                 <FaPlay className="text-cyan-400 text-sm" />
               </a>
             </motion.div>
