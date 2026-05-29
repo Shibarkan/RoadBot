@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaRobot, FaShoppingCart } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from "lucide-react";
 // import {FaPlus} from "react-icons/fa";  <-- menambah tombol tambah poroduk
-
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,7 +29,7 @@ const Header = () => {
     // Listener untuk mendeteksi perubahan storage (antar tab atau window)
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("storage", updateCartCount);
-    
+
     // Listener custom event untuk update real-time di halaman yang sama
     window.addEventListener("cartUpdated", updateCartCount);
 
@@ -41,30 +40,26 @@ const Header = () => {
     };
   }, []);
 
-const handleNavClick = (e, item) => {
+  const handleNavClick = (e, item) => {
+    // Tutup navbar mobile setiap menu ditekan
+    setIsOpen(false);
 
-  // Tutup navbar mobile setiap menu ditekan
-  setIsOpen(false);
+    if (item.name === "Cara Kerja") {
+      e.preventDefault();
 
-  if (item.name === "Cara Kerja") {
-    e.preventDefault();
+      if (location.pathname === "/") {
+        const el = document.getElementById("cara-kerja");
 
-    if (location.pathname === "/") {
-
-      const el = document.getElementById("cara-kerja");
-
-      if (el) {
-        el.scrollIntoView({
-          behavior: "smooth"
-        });
+        if (el) {
+          el.scrollIntoView({
+            behavior: "smooth",
+          });
+        }
+      } else {
+        navigate("/#cara-kerja");
       }
-
-    } else {
-
-      navigate("/#cara-kerja");
     }
-  }
-};
+  };
 
   const menuItems = [
     { name: "Beranda ", path: "/" },
@@ -84,11 +79,16 @@ const handleNavClick = (e, item) => {
 
       <div className="relative max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* LOGO */}
-        <Link to="/" className="flex items-center gap-2 text-2xl font-extrabold tracking-tight cursor-pointer group">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-2xl font-extrabold tracking-tight cursor-pointer group"
+        >
           <FaRobot className="text-3xl text-blue-400 group-hover:text-cyan-300 transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
           <div>
             <span className="text-white">RoadFix</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 ml-1">AI</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 ml-1">
+              AI
+            </span>
           </div>
         </Link>
 
@@ -112,8 +112,8 @@ const handleNavClick = (e, item) => {
         {/* ACTIONS RIGHT */}
         <div className="flex items-center gap-3 lg:gap-5">
           {/* KERANJANG BELANJA */}
-          <Link 
-            to="/cart" 
+          <Link
+            to="/cart"
             className="relative p-2.5 text-gray-300 hover:text-cyan-400 transition-all hover:bg-white/5 rounded-full"
           >
             <FaShoppingCart className="text-xl md:text-2xl" />
@@ -145,18 +145,29 @@ const handleNavClick = (e, item) => {
           </div>
 
           {/* MOBILE MENU BUTTON */}
-          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-gray-300 hover:text-cyan-300 p-2">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden text-gray-300 hover:text-cyan-300 p-2"
+          >
             <div className="w-6 h-5 flex flex-col justify-between relative">
-              <span className={`block h-[2px] w-full bg-current rounded-full transition-all ${isOpen ? "rotate-45 translate-y-[9px]" : ""}`}></span>
-              <span className={`block h-[2px] w-full bg-current rounded-full transition-all ${isOpen ? "opacity-0" : ""}`}></span>
-              <span className={`block h-[2px] w-full bg-current rounded-full transition-all ${isOpen ? "-rotate-45 -translate-y-[9px]" : ""}`}></span>
+              <span
+                className={`block h-[2px] w-full bg-current rounded-full transition-all ${isOpen ? "rotate-45 translate-y-[9px]" : ""}`}
+              ></span>
+              <span
+                className={`block h-[2px] w-full bg-current rounded-full transition-all ${isOpen ? "opacity-0" : ""}`}
+              ></span>
+              <span
+                className={`block h-[2px] w-full bg-current rounded-full transition-all ${isOpen ? "-rotate-45 -translate-y-[9px]" : ""}`}
+              ></span>
             </div>
           </button>
         </div>
       </div>
 
       {/* MOBILE MENU */}
-      <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden absolute w-full ${isOpen ? "max-h-[600px] opacity-100 visible" : "max-h-0 opacity-0 invisible"}`}>
+      <div
+        className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden absolute w-full ${isOpen ? "max-h-[600px] opacity-100 visible" : "max-h-0 opacity-0 invisible"}`}
+      >
         <div className="bg-gray-900/95 backdrop-blur-xl px-4 py-4 space-y-2 border-t border-white/10 shadow-2xl">
           {menuItems.map((item) => (
             <Link
@@ -166,16 +177,22 @@ const handleNavClick = (e, item) => {
               className="flex items-center justify-between px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all"
             >
               <span className="font-medium">{item.name}</span>
-              <ChevronRight className={location.pathname === "/cart" ? "text-cyan-400" : ""} />
+              <ChevronRight
+                className={location.pathname === "/cart" ? "text-cyan-400" : ""}
+              />
             </Link>
           ))}
           <div className="pt-6 pb-4 px-2 flex flex-col gap-3">
-            <Link to="/marketplace" onClick={() => setIsOpen(false)} className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-bold flex justify-center items-center gap-2">
-                Belanja Sekarang
+            <Link
+              to="/marketplace"
+              onClick={() => setIsOpen(false)}
+              className="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-bold flex justify-center items-center gap-2"
+            >
+              Belanja Sekarang
             </Link>
             {/* <Link to="/upload" onClick={() => setIsOpen(false)} className="w-full py-3 bg-white/5 border border-white/20 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2">
               <FaPlus className="text-cyan-400" /> Jual Produk
-            </Link> */} 
+            </Link> */}
           </div>
         </div>
       </div>

@@ -31,8 +31,7 @@ const Marketplace = () => {
 
   // ================= WISHLIST =================
   const [wishlist, setWishlist] = useState([]);
-  const [showWishlistAlert, setShowWishlistAlert] =
-    useState(false);
+  const [showWishlistAlert, setShowWishlistAlert] = useState(false);
 
   // ================= PAGINATION =================
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,9 +43,7 @@ const Marketplace = () => {
     window.scrollTo(0, 0);
 
     const savedWishlist =
-      JSON.parse(
-        localStorage.getItem("roadfix_wishlist")
-      ) || [];
+      JSON.parse(localStorage.getItem("roadfix_wishlist")) || [];
 
     setWishlist(savedWishlist);
 
@@ -82,14 +79,9 @@ const Marketplace = () => {
 
   // ================= CART =================
   const handleConfirmAdd = () => {
-    const cart =
-      JSON.parse(
-        localStorage.getItem("roadfix_cart")
-      ) || [];
+    const cart = JSON.parse(localStorage.getItem("roadfix_cart")) || [];
 
-    const exist = cart.find(
-      (i) => i.id === selectedProduct.id
-    );
+    const exist = cart.find((i) => i.id === selectedProduct.id);
 
     if (exist) {
       exist.quantity += qty;
@@ -99,21 +91,14 @@ const Marketplace = () => {
         name: selectedProduct.name,
         price: selectedProduct.price,
         image: selectedProduct.image_url,
-        shop_name:
-          selectedProduct.shop_name ||
-          "RoadFix Official Store",
+        shop_name: selectedProduct.shop_name || "RoadFix Official Store",
         quantity: qty,
       });
     }
 
-    localStorage.setItem(
-      "roadfix_cart",
-      JSON.stringify(cart)
-    );
+    localStorage.setItem("roadfix_cart", JSON.stringify(cart));
 
-    window.dispatchEvent(
-      new Event("cartUpdated")
-    );
+    window.dispatchEvent(new Event("cartUpdated"));
 
     setShowCartPopup(false);
 
@@ -128,15 +113,10 @@ const Marketplace = () => {
   const toggleWishlist = (product) => {
     let updatedWishlist = [...wishlist];
 
-    const exists = updatedWishlist.find(
-      (i) => i.id === product.id
-    );
+    const exists = updatedWishlist.find((i) => i.id === product.id);
 
     if (exists) {
-      updatedWishlist =
-        updatedWishlist.filter(
-          (i) => i.id !== product.id
-        );
+      updatedWishlist = updatedWishlist.filter((i) => i.id !== product.id);
     } else {
       updatedWishlist.unshift(product);
 
@@ -149,22 +129,15 @@ const Marketplace = () => {
 
     setWishlist(updatedWishlist);
 
-    localStorage.setItem(
-      "roadfix_wishlist",
-      JSON.stringify(updatedWishlist)
-    );
+    localStorage.setItem("roadfix_wishlist", JSON.stringify(updatedWishlist));
   };
 
   // ================= FILTER =================
   const filteredProducts = [...products]
     .sort((a, b) => {
-      const aWishlisted = wishlist.some(
-        (i) => i.id === a.id
-      );
+      const aWishlisted = wishlist.some((i) => i.id === a.id);
 
-      const bWishlisted = wishlist.some(
-        (i) => i.id === b.id
-      );
+      const bWishlisted = wishlist.some((i) => i.id === b.id);
 
       return bWishlisted - aWishlisted;
     })
@@ -173,30 +146,23 @@ const Marketplace = () => {
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
 
-      const matchFilter =
-        filter === "Semua" ||
-        item.category === filter;
+      const matchFilter = filter === "Semua" || item.category === filter;
 
       return matchSearch && matchFilter;
     });
 
   // ================= PAGINATION =================
-  const totalPages = Math.ceil(
-    filteredProducts.length / productsPerPage
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  const startIndex = (currentPage - 1) * productsPerPage;
+
+  const currentProducts = filteredProducts.slice(
+    startIndex,
+    startIndex + productsPerPage,
   );
-
-  const startIndex =
-    (currentPage - 1) * productsPerPage;
-
-  const currentProducts =
-    filteredProducts.slice(
-      startIndex,
-      startIndex + productsPerPage
-    );
 
   return (
     <section className="py-4 w-full bg-[#030712]/90 backdrop-blur-sm min-h-screen pt-20 overflow-x-hidden">
-      
       {/* ================= ALERT CART ================= */}
       <AnimatePresence>
         {showAlert && (
@@ -241,14 +207,11 @@ const Marketplace = () => {
       <AnimatePresence>
         {showCartPopup && selectedProduct && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center px-4">
-
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() =>
-                setShowCartPopup(false)
-              }
+              onClick={() => setShowCartPopup(false)}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
 
@@ -268,9 +231,7 @@ const Marketplace = () => {
               className="relative bg-[#111827] border border-white/10 w-full max-w-sm rounded-3xl p-6 shadow-2xl"
             >
               <button
-                onClick={() =>
-                  setShowCartPopup(false)
-                }
+                onClick={() => setShowCartPopup(false)}
                 className="absolute top-4 right-4 text-gray-500 hover:text-white"
               >
                 <FaTimes />
@@ -293,9 +254,7 @@ const Marketplace = () => {
                   </p>
 
                   <p className="text-cyan-400 font-bold">
-                    {formatRupiah(
-                      selectedProduct.price
-                    )}
+                    {formatRupiah(selectedProduct.price)}
                   </p>
                 </div>
               </div>
@@ -307,24 +266,16 @@ const Marketplace = () => {
 
                 <div className="flex items-center gap-6">
                   <button
-                    onClick={() =>
-                      setQty(
-                        Math.max(1, qty - 1)
-                      )
-                    }
+                    onClick={() => setQty(Math.max(1, qty - 1))}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-white"
                   >
                     <FaMinus className="text-xs" />
                   </button>
 
-                  <span className="text-xl font-black text-white">
-                    {qty}
-                  </span>
+                  <span className="text-xl font-black text-white">{qty}</span>
 
                   <button
-                    onClick={() =>
-                      setQty(qty + 1)
-                    }
+                    onClick={() => setQty(qty + 1)}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-white"
                   >
                     <FaPlus className="text-xs" />
@@ -345,12 +296,9 @@ const Marketplace = () => {
 
       {/* ================= CONTENT ================= */}
       <div className="max-w-[1400px] mx-auto px-4">
-
         {/* ================= SEARCH ================= */}
         <div className="sticky top-16 z-30 mb-6 bg-[#030712]/80 backdrop-blur-md py-4">
-
           <div className="flex gap-3">
-
             {/* SEARCH */}
             <div className="relative flex-grow">
               <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -359,11 +307,7 @@ const Marketplace = () => {
                 type="text"
                 placeholder="Cari alat atau jasa konstruksi..."
                 value={searchQuery}
-                onChange={(e) =>
-                  setSearchQuery(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-800 text-sm text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
               />
             </div>
@@ -371,22 +315,14 @@ const Marketplace = () => {
             {/* FILTER */}
             <select
               value={filter}
-              onChange={(e) =>
-                setFilter(e.target.value)
-              }
+              onChange={(e) => setFilter(e.target.value)}
               className="bg-gray-900 border border-gray-800 text-sm text-white px-4 py-3 rounded-xl focus:border-cyan-500 transition-all outline-none"
             >
-              <option value="Semua">
-                Semua
-              </option>
+              <option value="Semua">Semua</option>
 
-              <option value="Produk">
-                Produk
-              </option>
+              <option value="Produk">Produk</option>
 
-              <option value="Jasa">
-                Jasa
-              </option>
+              <option value="Jasa">Jasa</option>
             </select>
 
             {/* UPLOAD */}
@@ -409,147 +345,109 @@ const Marketplace = () => {
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-
-              {currentProducts.map(
-                (product) => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{
-                      opacity: 0,
-                    }}
-                    animate={{
-                      opacity: 1,
-                    }}
-                    className="group cursor-pointer bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-cyan-500/40 transition-all shadow-lg"
+              {currentProducts.map((product) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  className="group cursor-pointer bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-cyan-500/40 transition-all shadow-lg"
+                >
+                  {/* IMAGE */}
+                  <div
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    className="aspect-square bg-gray-800 overflow-hidden relative"
                   >
+                    {/* WISHLIST BADGE */}
+                    {wishlist.some((i) => i.id === product.id) && (
+                      <div className="absolute top-2 left-2 z-20 bg-pink-500 text-white text-[10px] px-2 py-1 rounded-full shadow-lg">
+                        Wishlist
+                      </div>
+                    )}
 
-                    {/* IMAGE */}
-                    <div
-                      onClick={() =>
-                        navigate(
-                          `/product/${product.id}`
-                        )
-                      }
-                      className="aspect-square bg-gray-800 overflow-hidden relative"
-                    >
+                    <img
+                      src={product.image_url}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      alt={product.name}
+                    />
+                  </div>
 
-                      {/* WISHLIST BADGE */}
-                      {wishlist.some(
-                        (i) =>
-                          i.id === product.id
-                      ) && (
-                        <div className="absolute top-2 left-2 z-20 bg-pink-500 text-white text-[10px] px-2 py-1 rounded-full shadow-lg">
-                          Wishlist
-                        </div>
-                      )}
+                  {/* CONTENT */}
+                  <div className="p-2">
+                    <h3 className="text-[11px] text-gray-200 line-clamp-2 min-h-[32px]">
+                      {product.name}
+                    </h3>
 
-                      <img
-                        src={
-                          product.image_url
-                        }
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        alt={product.name}
-                      />
-                    </div>
-
-                    {/* CONTENT */}
-                    <div className="p-2">
-
-                      <h3 className="text-[11px] text-gray-200 line-clamp-2 min-h-[32px]">
-                        {product.name}
-                      </h3>
-
-                      <div className="flex justify-between items-end gap-2 mt-2">
-
-                        {/* PRICE */}
-                        <div>
-                          <div className="text-cyan-400 text-xs font-black">
-                            {formatRupiah(
-                              product.price
-                            )}
-                          </div>
-
-                          <div className="flex items-center text-[10px] text-gray-500 mt-1">
-                            <FaStar className="text-yellow-400 mr-1" />
-
-                            {product.average_rating ||
-                              0}
-                          </div>
+                    <div className="flex justify-between items-end gap-2 mt-2">
+                      {/* PRICE */}
+                      <div>
+                        <div className="text-cyan-400 text- font-black">
+                          {formatRupiah(product.price)}
                         </div>
 
-                        {/* BUTTONS */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center text-[10px] text-gray-500 mt-1">
+                          <FaStar className="text-yellow-400 mr-1" />
 
-                          {/* WISHLIST */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                          {product.average_rating || 0}
+                        </div>
+                      </div>
 
-                              toggleWishlist(
-                                product
-                              );
-                            }}
-                            className={`
+                      {/* BUTTONS */}
+                      <div className="flex items-center gap-2">
+                        {/* WISHLIST */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+
+                            toggleWishlist(product);
+                          }}
+                          className={`
                               p-2.5 rounded-xl transition-all
                               ${
-                                wishlist.some(
-                                  (i) =>
-                                    i.id ===
-                                    product.id
-                                )
+                                wishlist.some((i) => i.id === product.id)
                                   ? "bg-pink-500 text-white shadow-[0_0_20px_rgba(236,72,153,0.5)]"
                                   : "bg-pink-500/10 text-pink-400 hover:bg-pink-500 hover:text-white"
                               }
                             `}
-                          >
-                            <FaHeart className="text-sm" />
-                          </button>
+                        >
+                          <FaHeart className="text-sm" />
+                        </button>
 
-                          {/* CART */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                        {/* CART */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
 
-                              setSelectedProduct(
-                                product
-                              );
+                            setSelectedProduct(product);
 
-                              setQty(1);
+                            setQty(1);
 
-                              setShowCartPopup(
-                                true
-                              );
-                            }}
-                            className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-inner"
-                          >
-                            <FaShoppingCart className="text-sm" />
-                          </button>
-                        </div>
+                            setShowCartPopup(true);
+                          }}
+                          className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-inner"
+                        >
+                          <FaShoppingCart />
+                        </button>
                       </div>
                     </div>
-                  </motion.div>
-                )
-              )}
+                  </div>
+                </motion.div>
+              ))}
             </div>
 
             {/* ================= PAGINATION ================= */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 mt-10 flex-wrap">
-
                 {/* PREV */}
                 <button
                   onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.max(
-                        prev - 1,
-                        1
-                      )
-                    )
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
-                  disabled={
-                    currentPage === 1
-                  }
+                  disabled={currentPage === 1}
                   className={`
                     px-4 py-2 rounded-xl text-sm font-bold transition-all
                     ${
@@ -563,54 +461,37 @@ const Marketplace = () => {
                 </button>
 
                 {/* PAGE NUMBER */}
-                {[...Array(totalPages)].map(
-                  (_, index) => {
-                    const page =
-                      index + 1;
+                {[...Array(totalPages)].map((_, index) => {
+                  const page = index + 1;
 
-                    return (
-                      <button
-                        key={page}
-                        onClick={() =>
-                          setCurrentPage(
-                            page
-                          )
-                        }
-                        className={`
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`
                           w-10 h-10 rounded-xl text-sm font-bold transition-all
                           ${
-                            currentPage ===
-                            page
+                            currentPage === page
                               ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.5)]"
                               : "bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white"
                           }
                         `}
-                      >
-                        {page}
-                      </button>
-                    );
-                  }
-                )}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
 
                 {/* NEXT */}
                 <button
                   onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(
-                        prev + 1,
-                        totalPages
-                      )
-                    )
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
-                  disabled={
-                    currentPage ===
-                    totalPages
-                  }
+                  disabled={currentPage === totalPages}
                   className={`
                     px-4 py-2 rounded-xl text-sm font-bold transition-all
                     ${
-                      currentPage ===
-                      totalPages
+                      currentPage === totalPages
                         ? "bg-gray-800 text-gray-500 cursor-not-allowed"
                         : "bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-white"
                     }
